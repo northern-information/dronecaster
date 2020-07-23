@@ -1,13 +1,13 @@
  Engine_Dronecaster : CroneEngine {
-	var <synth;
+  var <synth;
 
-	*new { arg context, doneCallback;
-		^super.new(context, doneCallback);
-	}
+  *new { arg context, doneCallback;
+    ^super.new(context, doneCallback);
+  }
 
-	alloc {
-	
-		SynthDef(\Sine, {
+  alloc {
+  
+    SynthDef(\Sine, {
       arg out, hz=440, amp=0.5, amplag=0.02, hzlag=0.01;
       var drone_, amp_, hz_;
       amp_ = Lag.ar(K2A.ar(amp), amplag);
@@ -47,13 +47,13 @@
           synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
         });
       });
-    });	
-		
-	}
+    }); 
+    
+  }
 
-	free {
-		synth.free;
-	}
-	
+  free {
+    synth.free;
+  }
+  
 }
 
