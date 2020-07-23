@@ -1,6 +1,8 @@
+https://llllllll.co/t/dronecaster-contribute-a-synthdef/34737
+
 # dronecaster
 
-cast drones for hours, send it out to your gear and `.wav` whatever beauty returns.
+_cast drones for hours, send it out to your gear and `.wav` whatever beauty returns_
 
 ![dronecaster](img/dronecaster.png) ![instructions](img/instructions.png)
 
