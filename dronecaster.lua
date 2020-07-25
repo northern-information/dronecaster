@@ -124,7 +124,7 @@ end
 
 function updateDrone(x)
   print(round(x))
-  engine.drone(round(x))
+  -- engine.drone(round(x))
 end
 
 
