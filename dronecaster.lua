@@ -57,9 +57,8 @@ local screen_h = 15
 
 
 -- time
-local seconds = 0
-local counter = metro.init()
 local recording_time = 0
+local counter = metro.init()
 
 
 
@@ -68,6 +67,8 @@ local playing_frame = 1
 local recording_frame = 1
 local bird_home_x = 25
 local bird_home_y = 25
+local last_drift = 0
+local last_wind = 0
 local drift_min_x = bird_home_x - 5
 local drift_min_y = bird_home_y - 3
 local drift_max_x = bird_home_x + 5
@@ -108,6 +109,8 @@ function init()
   params:add_control("drone","drone",controlspec.new(1, 9, "lin", 0, 1, "drone"))
   params:set_action("drone", function(x) update_drone(x) end)
 
+  engine.stop(1) -- todo: how to not have the engine automatically start?
+
   -- dev
   -- key(3, 1) -- start
   -- key(2, 1) -- record
@@ -116,62 +119,72 @@ end
 
 
 
-function the_sands_of_time(c)
-  seconds = c
+function the_sands_of_time()
+  
   if playing then
     playing_frame = playing_frame + 1  
   end
+  
   if recording then
     recording_frame = recording_frame + 1
     recording_time = recording_time + 1
   end
+  
   redraw()
-end
 
-
-
-function count()
-  units = units + 1
-  ms = units / 100
-  seconds = ms % 60
-  redraw()
 end
 
 
 
 function redraw()
+  
   screen.clear()
-  draw_top_menu()
+  
   draw_birds()
   draw_wind()
   draw_lights()
   draw_uap()
   draw_landscape()
+  
+  draw_top_menu()
   draw_clock()
   draw_play_stop()
   draw_recording()
   draw_alert_recording()
   draw_alert_casting()
+  
   screen.update()
+    
 end
 
 
 
 function update_hz(x)
-  engine.hz(x)
+  
+  if playing then 
+    engine.hz(x)
+  end
+  
 end
 
 
 
 function update_amp(x)
-  engine.amp(x)
+  
+  if playing then
+    engine.amp(x)
+  end
+  
 end
 
 
 
 function update_drone(x)
-  print(round(x))
-  -- engine.drone(round(x))
+  
+  if playing then
+    engine.drone(round(x))
+  end
+  
 end
 
 
@@ -210,7 +223,6 @@ function key(n, z)
     recording = not recording
     
     if recording == true then
-      units = 0
       recording_time = 0
       alert_recording_frame = 1
       alert_recording_message = start_recording_message
@@ -232,10 +244,12 @@ function key(n, z)
     alert_casting = true
     
     if playing == true then
-      engine.startStop(0) -- todo: just make it stop()
+      engine.start(1)
+      engine.amp(params:get("amp"))
+      engine.hz(params:get("hz"))
       alert_casting_message = start_casting_message
     else
-      engine.startStop(1) -- todo: just make it start()
+      engine.stop(1)
       alert_casting_message = stop_casting_message
     end
     
@@ -251,27 +265,34 @@ end
 --------------------------------------------------------------------------------
 
 function round(num, places)
+  
   if places and places > 0 then
-    mult = 10 ^ places
+    local mult = 10 ^ places
     return math.floor(num * mult + 0.5) / mult
   end
+  
   return math.floor(num + 0.5)
+  
 end
 
 
 
 function mlrs(a, b, c, d)
+  
   screen.move(a, b)
   screen.line_rel(c, d)
   screen.stroke()
+  
 end
 
 
 
 function mls(a, b, c, d)
+  
   screen.move(a, b)
   screen.line(c, d)
   screen.stroke()
+  
 end
 
 
@@ -316,20 +337,24 @@ end
 
 
 function draw_alert_window()
+  
   screen.rect(alert_x, alert_y, alert_w, alert_h)
   screen.level(screen_h)
   screen.stroke()
   screen.rect(alert_x, alert_y, alert_w - 1, alert_h - 1)
   screen.level(0)
   screen.fill()
+  
 end
 
 
 
 function draw_alert_message(x)
+  
   screen.move((alert_x + (alert_w / 2)), (alert_y + (alert_h / 2) + 2))
   screen.level(screen_l)
   screen.text_center(x)
+  
 end
 
 
@@ -343,10 +368,13 @@ function draw_top_menu()
   mlrs(88, 12, 40, 0)
 
   screen.level(screen_h)
+  
   screen.move(2, 8)
   screen.text(round(params:get("amp"), 2) .. " amp")
+  
   screen.move(45, 8)
   screen.text(round(params:get("hz")) .. " hz")
+  
   screen.move(89, 8)
   screen.text(drones[round(params:get("drone"))])
 
@@ -355,9 +383,11 @@ end
 
 
 function draw_clock()
+  
   screen.level(screen_l)
   screen.move(7, 64)
   screen.text(util.s_to_hms(recording_time))
+  
 end
 
 
@@ -368,15 +398,16 @@ function draw_play_stop()
 
   if playing == true then
     -- play
-    mls(120, 59, 120, 64)
-    mls(121, 60, 121, 63)
-    mls(122, 61, 122, 62)
+    mls(121, 59, 121, 64)
+    mls(122, 60, 122, 63)
+    mls(123, 61, 123, 62)
   else
     -- stop
     mls(120, 59, 120, 64)
     mls(121, 59, 121, 64)
     mls(122, 59, 122, 64)
     mls(123, 59, 123, 64)
+    mls(124, 59, 124, 64)
   end
 
 end
@@ -388,6 +419,7 @@ function draw_recording()
   screen.level(screen_l)
 
   if recording then
+    
     if (recording_frame % 2) == 1 then
       screen.circle(2, 61, 2)
       screen.fill()
@@ -395,9 +427,12 @@ function draw_recording()
       screen.circle(2, 61, 2)
       screen.stroke()
     end
+    
   else
+    
     screen.circle(2, 61, 2)
     screen.stroke()
+    
   end
   
 
@@ -410,31 +445,28 @@ end
 
 function draw_uap()
   
-  luck = math.random(0, 7)
+  local luck = math.random(0, 7)
+  local uap_frame = playing_frame % 5
 
   if playing and (luck == 3) and (unidentified_aerial_phenomenon == false) then
     unidentified_aerial_phenomenon = true
-    uap_frame = 1
   end
   
   if (unidentified_aerial_phenomenon) then
+    
     if uap_frame == 1 then
       mls(100, 18, 98, 20)
-      uap_frame = 2
     elseif uap_frame == 2 then
       mls(100, 18, 90, 25)
-      uap_frame = 3
     elseif uap_frame == 3 then
       mls(94, 22, 89, 26)
-      uap_frame = 4
     elseif uap_frame == 4 then
       mls(88, 26, 86, 28)
-      uap_frame = 5
-    elseif uap_frame == 5 then
+    elseif uap_frame == 0 then
       mlrs(85, 30, 1, 0)
       unidentified_aerial_phenomenon = false
-      uap_frame = false
     end
+    
   end
   
 end
@@ -443,10 +475,16 @@ end
 
 function drift()
   
-  x_coin = math.random(0, 1)
-  y_coin = math.random(0, 1)
-  this_or_that = math.random(0, 1)
-  that_or_this = math.random(0, 1)
+  if last_drift == playing_frame then
+    return
+  end
+  
+  last_drift = playing_frame
+  
+  local x_coin = math.random(0, 1)
+  local y_coin = math.random(0, 1)
+  local this_or_that = math.random(0, 1)
+  local that_or_this = math.random(0, 1)
   
   if this_or_that == 0 then
     check_x = (x_coin * -1) + this_drift_x
@@ -484,19 +522,18 @@ function draw_birds()
 
   screen.level(screen_l)
 
-  bird_frame = playing_frame % 3
+  local bird_frame = playing_frame % 3
 
   if playing then
     drift()
   end
 
-  joe_now_x = this_drift_x
-  joe_now_y = this_drift_y
-  bethNowX = this_drift_x - 5
-  beth_now_y = this_drift_y + 5
-  alex_now_x = this_drift_x + 7
-  alex_now_y = this_drift_y + 4
-
+  local joe_now_x = this_drift_x
+  local joe_now_y = this_drift_y
+  local bethNowX = this_drift_x - 5
+  local beth_now_y = this_drift_y + 5
+  local alex_now_x = this_drift_x + 7
+  local alex_now_y = this_drift_y + 4
 
   if bird_frame == 0 then
     -- joe
@@ -539,15 +576,17 @@ end
 
 
 function draw_wind()
-
-  if not playing then
+  
+  if wind_drift == playing_frame then
     return
   end
   
+  wind_drift = playing_frame
+
   screen.level(screen_l)
 
-  wind_frame_1 = playing_frame % 20
-  wind_frame_2 = playing_frame % 13
+  local wind_frame_1 = playing_frame % 20
+  local wind_frame_2 = playing_frame % 13
 
   if math.random(0, 1) == 1 then
     mlrs(wind_frame_1 + 80, 49, 1, 0)
@@ -590,48 +629,62 @@ end
 
 
 function light_one()
+  
   mlrs(62, 25, 1, 1)
+  
 end
 
 
 
 function light_two()
+  
   mlrs(65, 17, 1, 0)
+  
 end
 
 
 
 function light_three()
+  
   mlrs(69, 23, 1, 1)
+  
 end
 
 
 
 function light_all()
+  
   light_one()
   light_two()
   light_three()
+  
 end
 
 
 
 function flare_one(x)
+  
   screen.circle(62, 25, x)
   screen.stroke()
+  
 end
 
 
 
 function flare_two(x)
+  
   screen.circle(65, 17, x)
   screen.stroke()
+  
 end
 
 
 
 function flare_three(x)
+  
   screen.circle(69, 23, x)
   screen.stroke()
+  
 end
 
 
@@ -640,7 +693,7 @@ function draw_lights()
 
   screen.level(screen_l)
 
-  light_frame = playing_frame % 9
+  local light_frame = playing_frame % 9
 
   if light_frame == 1 then
     light_all()
