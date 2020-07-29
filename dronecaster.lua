@@ -2,6 +2,7 @@
 --
 -- k1: exit  e1: drone
 --
+--
 --            e2: hz      e3: amp
 --          k2: record  k3: cast
 --
@@ -10,6 +11,7 @@
 --------------------------------------------------------------------------------
 
 filename_prefix = "dronecaster_"
+save_path = _path.audio .. "dronecaster/"
 amp_default = 0.02
 hz_default = 440
 drone_default = 1
@@ -21,6 +23,7 @@ drone_default = 1
 
 engine.name = "Dronecaster"
 draw = include "lib/draw"
+record = include "lib/record"
 
 
 
@@ -63,10 +66,11 @@ alert["recording_frame"] = 0
 
 function init()
 
+  audio:pitch_off()
   draw.init()
 
-  if util.file_exists(_path.audio .. "dronecaster/") == false then
-    util.make_dir(_path.audio .. "dronecaster/")
+  if util.file_exists(save_path) == false then
+    util.make_dir(save_path)
   end
 
   counter.time = 1
@@ -158,7 +162,8 @@ end
 
 function update_drone(x)
   if playing then
-    engine.drone(round(x))
+    print(drones[round(params:get("drone"))])
+    -- engine.drone(drones[round(params:get("drone"))])
   end
 end
 
@@ -182,16 +187,16 @@ end
 
 function key(n, z)
   if n == 2 and z == 1 then
-    print('recording key')
     recording = not recording
-    print(recording)
     alert["recording"] = true
     alert["recording_frame"] = 1
     if recording == true then
       recording_time = 0
       alert["recording_message"] = messages["start_recording"]
+      record.start()
     else
       alert["recording_message"] = messages["stop_recording"]
+      record.stop(make_filename())
     end
   elseif n == 3 and z == 1 then
     playing = not playing
@@ -201,6 +206,7 @@ function key(n, z)
       engine.start(1)
       engine.amp(params:get("amp"))
       engine.hz(params:get("hz"))
+      -- engine.drone(drones[round(params:get("drone"))])
       alert["casting_message"] = messages["start_casting"]
     else
       engine.stop(1)
@@ -214,6 +220,11 @@ end
 
 -- utils
 --------------------------------------------------------------------------------
+
+function make_filename()
+  return save_path .. filename_prefix .. os.date("%Y_%m_%d_%H_%M_%S") .. ".wav"
+end
+
 
 function round(num, places)
   if places and places > 0 then
