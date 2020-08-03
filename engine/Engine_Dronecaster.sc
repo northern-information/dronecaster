@@ -1,11 +1,20 @@
  Engine_Dronecaster : CroneEngine {
   var <synth;
+  var <in;
 
   *new { arg context, doneCallback;
     ^super.new(context, doneCallback);
   }
 
   alloc {
+  
+    SynthDef(\InJacks, {
+      arg out;
+      var sig_;
+      sig_ = SoundIn.ar([0,1]);
+      Out.ar(out, sig_);
+    }).add;
+  
     SynthDef(\Sine, {
       arg out, hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
       var amp_, hz_;
@@ -16,7 +25,8 @@
     
     context.server.sync;
     
-    synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
+    //synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
+    in = Synth.new(\InJacks, [\out, context.out_a], context.xg);
     
     this.addCommand("hz", "f", { arg msg;
       synth.set(\hz, msg[1]);
@@ -35,8 +45,12 @@
     });
     
     this.addCommand("start", "i", { arg msg;
-        synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
-    }); 
+    //  synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
+    });
+    
+    this.addCommand("injack", "s", { arg msg;
+      in = Synth.new(\InJacks, [\out, context.out_b], context.xg);
+    });
    
   }
 

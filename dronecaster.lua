@@ -15,7 +15,7 @@ save_path = _path.audio .. "dronecaster/"
 amp_default = 0.02
 hz_default = 440
 drone_default = 1
-
+splash_screen = true
 
 
 -- engines & includes
@@ -41,6 +41,7 @@ counter = metro.init()
 recording_time = 0
 playing_frame = 1
 recording_frame = 1
+splash_screen_frame = 1
 
 
 -- messages & alerts
@@ -95,6 +96,12 @@ end
 
 
 function the_sands_of_time()
+  if splash_screen then
+    splash_screen_frame = splash_screen_frame + 1
+    if splash_screen_frame == 10 then
+      break_splash()
+    end
+  end
   if playing then
     playing_frame = playing_frame + 1  
   end
@@ -113,6 +120,12 @@ function redraw()
   screen.aa(0)
   screen.font_face(0)
   screen.font_size(8)
+  
+  if splash_screen then
+    splash_screen()
+    screen.update()
+    return
+  end
   
   pf = playing_frame
   rf = recording_time
@@ -173,6 +186,7 @@ end
 --------------------------------------------------------------------------------
 
 function enc(n,d)
+  break_splash()
   if n == 1 then
     params:delta("drone", d)
   elseif n == 2 then
@@ -186,6 +200,7 @@ end
 
 
 function key(n, z)
+  break_splash()
   if n == 2 and z == 1 then
     recording = not recording
     alert["recording"] = true
@@ -217,6 +232,31 @@ function key(n, z)
 end
 
 
+function break_splash()
+  if splash_screen then
+    splash_screen = false
+  end  
+end
+
+
+
+function splash_screen()
+  screen.move(0, 6)
+  screen.level(15)
+  -- d, 0
+  draw.mls(10, 0, 10, 64)
+  draw.mls(0, 64, 10, 64)
+  draw.mls(4, 44, 10, 44)
+  draw.mls(0, 64, 10, 44)
+  -- r
+  draw.mls(12, 0, 12, 64)
+  draw.mls(12, 1, 22, 1)
+  draw.mls(22, 1, 12, 20)
+  draw.mls(12, 22, 22, 22)
+  draw.mls(12, 20, 22, 64)
+  -- o
+  
+end
 
 -- utils
 --------------------------------------------------------------------------------

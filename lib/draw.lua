@@ -3,9 +3,9 @@
 
 local draw = {}
 
-screen_levels = {}
 
 function draw.init()
+  screen_levels = {}
   screen_levels["o"] = 0
   screen_levels["l"] = 5
   screen_levels["m"] = 10
@@ -29,8 +29,6 @@ function draw.init()
   
   unidentified_aerial_phenomenon = false
 end
-
-
 
 -- utils
 --------------------------------------------------------------------------------
