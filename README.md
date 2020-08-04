@@ -1,4 +1,4 @@
-join the discussion on lines: https://llllllll.co/t/dronecaster-contribute-a-synthdef/34737
+join the discussion on lines: https://l.llllllll.co/dronecaster
 
 we need more `SynthDefs`! contribute today!
 
