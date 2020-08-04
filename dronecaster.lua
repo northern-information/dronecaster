@@ -14,7 +14,7 @@
 -- ........................................
 -- l.llllllll.co/dronecaster
 -- <3 @tyleretters
--- v0.0.1 ALPHA
+-- v0.0.2 ALPHA
 
 -- engines & includes
 --------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ draw = include "lib/draw"
 --------------------------------------------------------------------------------
 filename_prefix = "dronecaster_"
 save_path = _path.audio .. "dronecaster/"
-amp_default = 1.0
+amp_default = .4
 hz_default = 55
 drone_default = 1
 drones = {"Mt. Zion", "Sine", "Supersaw", "Mt. Lion",}

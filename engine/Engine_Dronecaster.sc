@@ -99,7 +99,8 @@
         )
       });
       Out.ar(out, LeakDC.ar(Mix.ar(voices)));
-      
+    }).add;
+
     context.server.sync;
     
     // synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
