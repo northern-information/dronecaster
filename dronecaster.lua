@@ -183,7 +183,7 @@ function play_drone()
       engine.start_sine(1)
     elseif drone == 3 then
       engine.start_supersaw(1) 
-    elseif drone == 3 then
+    elseif drone == 4 then
         engine.start_lion(1)
     end
     engine.amp(params:get("amp"))

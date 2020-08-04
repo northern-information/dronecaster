@@ -15,6 +15,7 @@
     //   Out.ar(out, sig_);
     // }).add;
   
+    // The TestSine. Old faithful.
     SynthDef(\Sine, {
       arg out, hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
       var amp_, hz_;
@@ -24,6 +25,7 @@
     }).add;
 
     // @license
+    // Thee rusted satellites gather + sing.
     SynthDef(\Zion, {
       arg out, hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
       var amp_ = Lag.ar(K2A.ar(amp), amplag);
@@ -66,6 +68,7 @@
     }).add;
     
     // @license
+    // Roars through a twisting canyon.
     SynthDef(\Lion, {
       arg out, hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
       var amp_ = amp.lag(amplag);
