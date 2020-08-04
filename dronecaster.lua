@@ -126,6 +126,7 @@ function update_drone(x)
   if playing then
     stop_drone()
   end
+  playing = true
   -- print(round(params:get("drone"))
   -- engine.drone(round(params:get("drone")))
   play_drone()
