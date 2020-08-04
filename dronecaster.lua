@@ -67,7 +67,7 @@ function init()
   params:set_action("amp", function(x) update_amp(x) end)
   params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
   params:set_action("hz", function(x) update_hz(x) end)
-  params:add_control("drone","drone",controlspec.new(1, 2, "lin", 0, drone_default, "drone"))
+  params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone"))
   params:set_action("drone", function(x) update_drone(x) end)
   engine.stop(1) -- todo: how to not have the engine automatically start?
 end
