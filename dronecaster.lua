@@ -31,7 +31,6 @@ drone_default = 1
 drones = {"Mt. Zion", "Sine", "Supersaw", "Mt. Lion",}
 recording = false
 playing = false
-filename = filename_prefix
 counter = metro.init()
 recording_time = 0
 playing_frame = 1
@@ -138,7 +137,6 @@ end
 function enc(n,d)
   if n == 1 then
     params:set("drone", util.clamp(params:get("drone") + d, 1, #drones))
-    -- params:delta("drone", d)
   elseif n == 2 then
     params:delta("hz", d * .001)
   elseif n == 3 then
