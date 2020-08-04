@@ -9,6 +9,7 @@
 -- ........................................
 -- contributors:
 -- "Mt. Zion" by @license
+-- "Supersaw" by @cfd90
 -- ........................................
 -- l.llllllll.co/dronecaster
 -- <3 @tyleretters
@@ -27,7 +28,7 @@ save_path = _path.audio .. "dronecaster/"
 amp_default = 1.0
 hz_default = 55
 drone_default = 1
-drones = {"Mt. Zion", "Sine"}
+drones = {"Mt. Zion", "Sine", "Supersaw"}
 recording = false
 playing = false
 filename = filename_prefix
@@ -66,7 +67,7 @@ function init()
   params:set_action("amp", function(x) update_amp(x) end)
   params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
   params:set_action("hz", function(x) update_hz(x) end)
-  params:add_control("drone","drone",controlspec.new(1, 2, "lin", 0, drone_default, "drone"))
+  params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone"))
   params:set_action("drone", function(x) update_drone(x) end)
   engine.stop(1) -- todo: how to not have the engine automatically start?
 end
@@ -174,10 +175,13 @@ function key(n, z)
 end
 
 function play_drone()
-    if params:get("drone") == 1 then
+    drone = params:get("drone")
+    if drone == 1 then
       engine.start_zion(1)
-    else
+    elseif drone == 2 then
       engine.start_sine(1)
+    elseif drone == 3 then
+      engine.start_supersaw(1)
     end
     engine.amp(params:get("amp"))
     engine.hz(params:get("hz"))
