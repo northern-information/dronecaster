@@ -9,6 +9,7 @@
 -- ........................................
 -- contributors:
 -- "Mt. Zion" by @license
+-- "Mt. Lion" by @license
 -- ........................................
 -- l.llllllll.co/dronecaster
 -- <3 @tyleretters
@@ -27,7 +28,7 @@ save_path = _path.audio .. "dronecaster/"
 amp_default = 1.0
 hz_default = 55
 drone_default = 1
-drones = {"Mt. Zion", "Sine"}
+drones = {"Mt. Zion", "Mt. Lion", "Sine"}
 recording = false
 playing = false
 filename = filename_prefix
@@ -176,6 +177,8 @@ end
 function play_drone()
     if params:get("drone") == 1 then
       engine.start_zion(1)
+    elseif params:get("drone") == 2 then
+      engine.start_lion(1)
     else
       engine.start_sine(1)
     end
