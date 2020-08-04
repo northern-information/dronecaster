@@ -47,7 +47,7 @@
           rand.(0.1, maxAmp)
         );
       });
-      Out.ar(out, voices);
+      Out.ar(out, Mix.ar(voices));
     }).add;
     
     context.server.sync;
