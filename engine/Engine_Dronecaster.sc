@@ -50,6 +50,22 @@
       Out.ar(out, voices);
     }).add;
 
+    // @cfdrake
+    SynthDef(\Supersaw, {
+      arg out, hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
+      var amp_, hz_;
+      amp_ = Lag.ar(K2A.ar(amp), amplag);
+      hz_ = Lag.ar(K2A.ar(hz), hzlag);
+      Out.ar(out, Splay.ar(Array.fill(5, { |i|
+        BPF.ar(
+          Saw.ar(hz_ * i + SinOsc.kr(0.1 * i, 0, 0.5)),
+          100 + (i * 100) + SinOsc.kr(0.05 * i, mul: 100),
+          2
+        )
+      }), 1) * amp_);
+    }).add;
+    
+    // @license
     SynthDef(\Lion, {
       arg out, hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
       var amp_ = amp.lag(amplag);
@@ -80,8 +96,7 @@
         )
       });
       Out.ar(out, LeakDC.ar(Mix.ar(voices)));
-    }).add;
-    
+      
     context.server.sync;
     
     // synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
@@ -110,6 +125,10 @@
 
     this.addCommand("start_lion", "i", { arg msg;
       synth = Synth.new(\Lion, [\out, context.out_b], context.xg);
+    });
+    
+    this.addCommand("start_supersaw", "i", { arg msg;
+      synth = Synth.new(\Supersaw, [\out, context.out_b], context.xg);
     });
     
     // this.addCommand("injack", "s", { arg msg;
