@@ -175,14 +175,8 @@ end
 
 function play_drone()
     drone = params:get("drone")
-    if drone == 1 then
-      engine.start_zion(1)
-    elseif drone == 2 then
-      engine.start_sine(1)
-    elseif drone == 3 then
-      engine.start_supersaw(1) 
-    elseif drone == 4 then
-        engine.start_lion(1)
+    if drone > 0 and drone <= #drones then
+      engine.start_drone(drone - 1)
     end
     engine.amp(params:get("amp"))
     engine.hz(params:get("hz"))
