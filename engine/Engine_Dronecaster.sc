@@ -1,6 +1,7 @@
  Engine_Dronecaster : CroneEngine {
-  var <synth;
+  var synth;
   var drones;
+  var droneGroup;
   var hz = 55, amp = 0.4;
   // var <in;
 
@@ -11,6 +12,8 @@
   alloc {
     var baseDronePath = "/home/we/dust/code/dronecaster/engine/drones";
     var luaOsc = NetAddr("localhost", 10111);
+
+    droneGroup = Group.new(context.xg);
 
     drones = PathName.new(baseDronePath).entries.collect({|e| 
       var name = e.fileNameWithoutExtension;
@@ -45,19 +48,19 @@
     });
     
     this.addCommand("stop", "i", { arg msg;
-        synth.free;
+        droneGroup.freeAll;
     });
     
     this.addCommand("start", "s", { arg msg; 
       var drone, droneName;
 
-      if (synth != nil, { synth.free });  // Unload any playing synth
+      droneGroup.freeAll; // Unload any playing synth
       droneName = msg[1].asString;
       droneName.postln;
       drone = drones[droneName];
 
       if (drone != nil, {
-        synth = drone.play(context.xg, context.out_b, args: [hz: hz, amp: amp]);
+        synth = drone.play(droneGroup, context.out_b, args: [hz: hz, amp: amp]);
       });
     });
     
@@ -68,7 +71,7 @@
   }
 
   free {
-    synth.free;
+    droneGroup.freeAll;
   }
   
 }
