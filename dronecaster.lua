@@ -12,6 +12,10 @@
 -- "Supersaw" by @cfd90
 -- "Mt. Lion" by @license
 -- ........................................
+-- borrowings:
+-- - levels/effects parameter setting from 
+--   https://github.com/21echoes/pedalboard
+-- ........................................
 -- l.llllllll.co/dronecaster
 -- <3 @tyleretters
 -- v0.0.2 ALPHA
@@ -23,6 +27,9 @@ draw = include "lib/draw"
 
 -- variables
 --------------------------------------------------------------------------------
+local initital_monitor_level
+local initital_reverb_onoff
+
 filename_prefix = "dronecaster_"
 save_path = _path.audio .. "dronecaster/"
 amp_default = .4
@@ -53,6 +60,12 @@ alert["recording_frame"] = 0
 --------------------------------------------------------------------------------
 function init()
   audio:pitch_off()
+
+  initital_monitor_level = params:get('monitor_level')
+  params:set('monitor_level', -math.huge)
+  initital_reverb_onoff = params:get('reverb')
+  params:set('reverb', 1) -- 1 is OFF
+
   draw.init()
   if util.file_exists(save_path) == false then
     util.make_dir(save_path)
@@ -179,6 +192,12 @@ function osc_in(path, msg)
     print("adding drone" .. msg[1])
     table.insert(drones, msg[1])
   end
+end
+
+function cleanup()
+  -- Put user's audio settings back where they were
+  params:set('monitor_level', initital_monitor_level)
+  params:set('reverb', initital_reverb_onoff)
 end
 
 osc.event = osc_in -- should probably go in init? race conditions tho?
