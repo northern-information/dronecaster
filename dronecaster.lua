@@ -176,7 +176,7 @@ end
 -- utils
 --------------------------------------------------------------------------------
 function make_filename()
-  return save_path .. filename_prefix .. os.date("%Y_%m_%d_%H_%M_%S") .. ".wav"
+  return save_path .. filename_prefix .. os.date("%Y_%m_%d_%H_%M_%S") .. ".aiff"
 end
 
 function round(num, places)
