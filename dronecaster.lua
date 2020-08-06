@@ -28,7 +28,8 @@ save_path = _path.audio .. "dronecaster/"
 amp_default = .4
 hz_default = 55
 drone_default = 1
-drones = {"Mt. Zion", "Sine", "Supersaw", "Mt. Lion",}
+-- drones = {"Mt. Zion", "Sine", "Supersaw", "Mt. Lion",}
+drones = {}
 recording = false
 playing = false
 counter = metro.init()
@@ -176,7 +177,7 @@ end
 function play_drone()
     drone = params:get("drone")
     if drone > 0 and drone <= #drones then
-      engine.start_drone(drone - 1)
+      engine.start(drone - 1)
     end
     engine.amp(params:get("amp"))
     engine.hz(params:get("hz"))
@@ -199,3 +200,12 @@ function round(num, places)
   end
   return math.floor(num + 0.5)
 end
+
+function osc_in(path, msg)
+  if path == "/add_drone" then
+    print("adding drone" .. msg[1])
+    table.insert(drones, msg[1])
+  end
+end
+
+osc.event = osc_in -- should probably go in init? race conditions tho?

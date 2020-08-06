@@ -1,6 +1,7 @@
  Engine_Dronecaster : CroneEngine {
   var <synth;
   var drones;
+  var hz, amp;
   // var <in;
 
   *new { arg context, doneCallback;
@@ -8,13 +9,17 @@
   }
 
   alloc {
-    // TODO:
-    // [ ] Get path of this file
-    // [ ] Get dir from path
-    // [ ] Get all files in subdir "drones"
-    // [ ] Create dict of name -> implementation (from contents)
-    // [ ] Shake hands via OSC if necessary (race condition?)
-    // [ ] Notify Lua of names via OSC
+    var baseDronePath = "/home/we/dust/code/dronecaster/engine/drones";
+    var luaOsc = NetAddr("localhost", 10111);
+
+    drones = PathName.new(baseDronePath).entries.collect({|e| 
+      var name = e.fileNameWithoutExtension;
+      ("sending name: " ++ name).postln;
+      luaOsc.sendMsg("/add_drone", name);
+      e.fileNameWithoutExtension -> e.fullPath.load;
+    });
+    drones.postln;
+    drones = Dictionary.with(*drones);
 
     // SynthDef(\InJacks, {
     //   arg out;
@@ -24,16 +29,6 @@
     // }).add;
 
     // TODO: Lookup by string (name).
-    // Meanwhile, order below *must* match drones var in Lua!
-    drones = [
-      /*"Mt. Zion" -> ,
-
-      "Sine" -> , 
-
-      "Supersaw" -> , 
-
-      "Mt. Lion" -> , */
-    ];
   
     context.server.sync;
     
@@ -41,23 +36,37 @@
     // synth = Synth.new(\Zion, [\out, context.out_b], context.xg);
     // in = Synth.new(\InJacks, [\out, context.out_a], context.xg);
     
+    this.addCommand("send_list", "i", {
+      drones.keysDo({|name| 
+        ("sending name: " ++ name).postln;
+        luaOsc.sendMsg("/add_drone", name);
+      });
+      luaOsc.sendMsg("/sent_all") ;
+    });
+
     this.addCommand("hz", "f", { arg msg;
-      synth.set(\hz, msg[1]);
+      hz = msg[1];
+      synth.set(\hz, hz);
     });
     
     this.addCommand("amp", "f", { arg msg;
-      synth.set(\amp, msg[1]);
+      amp = msg[1];
+      synth.set(\amp, amp);
     });
     
     this.addCommand("stop", "i", { arg msg;
         synth.free;
     });
     
-    this.addCommand("start_drone", "i", { arg msg; 
+    this.addCommand("start", "s", { arg msg; 
+      var drone;
+
       if (synth != nil, { synth.free });  // Unload any playing synth
 
-      if (msg[1] < drones.size, {
-        synth = drones[msg[1]].value.play(context.xg, context.out_b);
+      drone = drones[msg[1].asString];
+
+      if (drone != nil, {
+        synth = drone.play(context.xg, context.out_b, [\hz, hz, \amp, amp]);
       });
     });
     
