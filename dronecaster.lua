@@ -112,15 +112,11 @@ function redraw()
 end
 
 function update_hz(x)
-  if playing then 
-    engine.hz(x)
-  end
+  engine.hz(x)
 end
 
 function update_amp(x)
-  if playing then
-    engine.amp(x)
-  end
+  engine.amp(x)
 end
 
 function update_drone(x)
@@ -175,12 +171,10 @@ function key(n, z)
 end
 
 function play_drone()
-    drone = params:get("drone")
-    if drone > 0 and drone <= #drones then
-      engine.start(drone - 1)
+    local droneIndex = params:get("drone")
+    if droneIndex > 0 and droneIndex <= #drones then
+      engine.start(drones[droneIndex])
     end
-    engine.amp(params:get("amp"))
-    engine.hz(params:get("hz"))
 end
 
 function stop_drone()

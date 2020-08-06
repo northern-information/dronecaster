@@ -1,7 +1,7 @@
  Engine_Dronecaster : CroneEngine {
   var <synth;
   var drones;
-  var hz, amp;
+  var hz = 55, amp = 0.4;
   // var <in;
 
   *new { arg context, doneCallback;
@@ -34,22 +34,14 @@
     // synth = Synth.new(\Zion, [\out, context.out_b], context.xg);
     // in = Synth.new(\InJacks, [\out, context.out_a], context.xg);
     
-    this.addCommand("send_list", "i", {
-      drones.keysDo({|name| 
-        ("sending name: " ++ name).postln;
-        luaOsc.sendMsg("/add_drone", name);
-      });
-      luaOsc.sendMsg("/sent_all") ;
-    });
-
     this.addCommand("hz", "f", { arg msg;
       hz = msg[1];
-      synth.set(\hz, hz);
+      if (synth != nil, { synth.set(\hz, hz) });
     });
     
     this.addCommand("amp", "f", { arg msg;
       amp = msg[1];
-      synth.set(\amp, amp);
+      if (synth != nil, { synth.set(\amp, amp) });
     });
     
     this.addCommand("stop", "i", { arg msg;
@@ -57,14 +49,15 @@
     });
     
     this.addCommand("start", "s", { arg msg; 
-      var drone;
+      var drone, droneName;
 
       if (synth != nil, { synth.free });  // Unload any playing synth
-
-      drone = drones[msg[1].asString];
+      droneName = msg[1].asString;
+      droneName.postln;
+      drone = drones[droneName];
 
       if (drone != nil, {
-        synth = drone.play(context.xg, context.out_b, [\hz, hz, \amp, amp]);
+        synth = drone.play(context.xg, context.out_b, args: [hz: hz, amp: amp]);
       });
     });
     
