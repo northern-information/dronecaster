@@ -28,7 +28,6 @@ save_path = _path.audio .. "dronecaster/"
 amp_default = .4
 hz_default = 55
 drone_default = 1
--- drones = {"Mt. Zion", "Sine", "Supersaw", "Mt. Lion",}
 drones = {}
 recording = false
 playing = false
@@ -64,12 +63,11 @@ function init()
   counter.event = the_sands_of_time
   counter:start()
   params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
-  params:set_action("amp", function(x) update_amp(x) end)
+  params:set_action("amp", engine.amp)
   params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
-  params:set_action("hz", function(x) update_hz(x) end)
+  params:set_action("hz", engine.hz)
   params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone"))
-  params:set_action("drone", function(x) update_drone(x) end)
-  engine.stop(1) -- todo: how to not have the engine automatically start?
+  params:set_action("drone", play_drone)
 end
 
 function the_sands_of_time()
@@ -111,24 +109,6 @@ function redraw()
   screen.update()
 end
 
-function update_hz(x)
-  engine.hz(x)
-end
-
-function update_amp(x)
-  engine.amp(x)
-end
-
-function update_drone(x)
-  if playing then
-    stop_drone()
-  end
-  playing = true
-  -- print(round(params:get("drone"))
-  -- engine.drone(round(params:get("drone")))
-  play_drone()
-end
-
 -- encs & keys
 --------------------------------------------------------------------------------
 function enc(n,d)
@@ -163,7 +143,7 @@ function key(n, z)
       play_drone()
       alert["casting_message"] = messages["start_casting"]
     else
-      stop_drone()
+      engine.stop(1)
       alert["casting_message"] = messages["stop_casting"]
     end
   end
@@ -172,13 +152,10 @@ end
 
 function play_drone()
     local droneIndex = params:get("drone")
+    playing = true
     if droneIndex > 0 and droneIndex <= #drones then
       engine.start(drones[droneIndex])
     end
-end
-
-function stop_drone()
-  engine.stop(1)
 end
 
 -- utils
