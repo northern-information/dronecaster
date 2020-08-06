@@ -28,8 +28,6 @@
     //   Out.ar(out, sig_);
     // }).add;
 
-    // TODO: Lookup by string (name).
-  
     context.server.sync;
     
     // synth = Synth.new(\Sine, [\out, context.out_b], context.xg);

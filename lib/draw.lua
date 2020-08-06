@@ -65,11 +65,11 @@ function draw.top_menu(d, h, a)
   draw.mlrs(88, 12, 40, 0)
   screen.level(screen_levels["h"])
   screen.move(2, 8)
-  screen.text(d)
+  screen.text(d or "")
   screen.move(45, 8)
-  screen.text(h)
+  screen.text(h or "")
   screen.move(89, 8)
-  screen.text(a)
+  screen.text(a or "")
 end
 
 
