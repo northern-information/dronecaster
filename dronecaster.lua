@@ -6,19 +6,19 @@
 --    k2: record      k3: cast
 --
 --
--- ........................................
+-- ................................................................
 -- contributors:
 -- "Mt. Zion" by @license
 -- "Supersaw" by @cfd90
 -- "Mt. Lion" by @license
--- ........................................
+-- ................................................................
 -- borrowings:
--- - levels/effects parameter setting from 
---   https://github.com/21echoes/pedalboard
--- ........................................
+-- levels/fx parameter code by
+-- @21echoes via pedalboard
+-- ................................................................
 -- l.llllllll.co/dronecaster
--- <3 @tyleretters
--- v0.0.2 ALPHA
+-- <3 @tyleretters & @license
+-- v0.0.4-beta
 
 -- engines & includes
 --------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ recording_frame = 1
 messages = {}
 messages["empty"] = "..."
 messages["start_recording"] = "Recording..."
-messages["stop_recording"] = "...recording stopped."
+messages["stop_recording"] = "...saved."
 messages["start_casting"] = "Casting drone..."
 messages["stop_casting"] = "Cast halted."
 alert = {}
@@ -198,6 +198,7 @@ function cleanup()
   -- Put user's audio settings back where they were
   params:set('monitor_level', initital_monitor_level)
   params:set('reverb', initital_reverb_onoff)
+  engine.record_stop(1)
 end
 
 osc.event = osc_in -- should probably go in init? race conditions tho?
