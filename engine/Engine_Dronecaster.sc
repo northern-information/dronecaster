@@ -2,8 +2,8 @@
   var synth;
   var drones;
   var droneGroup;
+  var inJacks, recordBus, recorder;
   var hz = 55, amp = 0.4;
-  // var <in;
 
   *new { arg context, doneCallback;
     ^super.new(context, doneCallback);
@@ -24,18 +24,12 @@
     drones.postln;
     drones = Dictionary.with(*drones);
 
-    // SynthDef(\InJacks, {
-    //   arg out;
-    //   var sig_;
-    //   sig_ = SoundIn.ar([0,1]);
-    //   Out.ar(out, sig_);
-    // }).add;
+    recordBus = Bus.audio(Crone.server, 2);
+    // Leave it running silently - it's low-CPU & there's less juggling
+    inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
+    recorder = Recorder.new(Crone.server);
 
     context.server.sync;
-    
-    // synth = Synth.new(\Sine, [\out, context.out_b], context.xg);
-    // synth = Synth.new(\Zion, [\out, context.out_b], context.xg);
-    // in = Synth.new(\InJacks, [\out, context.out_a], context.xg);
     
     this.addCommand("hz", "f", { arg msg;
       hz = msg[1];
@@ -63,15 +57,19 @@
         synth = drone.play(droneGroup, context.out_b, args: [hz: hz, amp: amp]);
       });
     });
-    
-    // this.addCommand("injack", "s", { arg msg;
-    //   in = Synth.new(\InJacks, [\out, context.out_b], context.xg);
-    // });
-   
+
+    this.addCommand("record_start", "s", { arg msg;
+      var path = msg[1].asString;
+      recorder.record(path, recordBus, 2);
+    });
+
+    this.addCommand("record_stop", "i", { arg msg;
+      recorder.stopRecording;
+    });
   }
 
   free {
     droneGroup.freeAll;
+    inJacks.free;
   }
-  
 }

@@ -37,8 +37,8 @@ playing_frame = 1
 recording_frame = 1
 messages = {}
 messages["empty"] = "..."
-messages["start_recording"] = "Recording broken..."
-messages["stop_recording"] = "...still broken."
+messages["start_recording"] = "Recording..."
+messages["stop_recording"] = "...recording stopped."
 messages["start_casting"] = "Casting drone..."
 messages["stop_casting"] = "Cast halted."
 alert = {}
@@ -128,12 +128,14 @@ function key(n, z)
     alert["recording"] = true
     alert["recording_frame"] = 1
     if recording == true then
+      local record_path = make_filename()
       recording_time = 0
       alert["recording_message"] = messages["start_recording"]
-      -- engine.record_start()
+      print("recording to file " .. record_path)
+      engine.record_start(record_path)
     else
       alert["recording_message"] = messages["stop_recording"]
-      -- engine.record_stop(make_filename())
+      engine.record_stop(1)
     end
   elseif n == 3 and z == 1 then
     playing = not playing
