@@ -66,6 +66,13 @@ function draw.top_menu(d, h, a)
   screen.level(screen_levels["h"])
   screen.move(2, 8)
   screen.text(d or "")
+  if alt then
+    screen.level(screen_levels["l"])    
+    screen.rect(44, 2, 40, 7)
+    screen.rect(88, 2, 40, 7)
+    screen.fill()
+    screen.level(screen_levels["o"])
+  end
   screen.move(45, 8)
   screen.text(h or "")
   screen.move(89, 8)

@@ -1,4 +1,4 @@
--- k1: exit  e1: drone
+-- k1: exit/alt  e1: drone
 --
 --
 --       e2: hz          e3: amp
@@ -18,7 +18,7 @@
 -- ................................................................
 -- l.llllllll.co/dronecaster
 -- <3 @tyleretters & @license
--- v0.0.4-beta
+-- v0.0.6-beta
 
 -- engines & includes
 --------------------------------------------------------------------------------
@@ -39,6 +39,7 @@ drones = {}
 recording = false
 playing = false
 counter = metro.init()
+alt = false
 recording_time = 0
 playing_frame = 1
 recording_frame = 1
@@ -125,41 +126,51 @@ end
 -- encs & keys
 --------------------------------------------------------------------------------
 function enc(n,d)
+  local mult
   if n == 1 then
     params:set("drone", util.clamp(params:get("drone") + d, 1, #drones))
   elseif n == 2 then
-    params:delta("hz", d * .001)
+    mult = alt and .1 or .001
+    params:delta("hz", d * mult)
   elseif n == 3 then
-    params:delta("amp", d * .1)
+    mult = alt and 10 or .1
+    params:delta("amp", d * mult)
   end
   redraw()
 end
 
 function key(n, z)
-  if n == 2 and z == 1 then
-    recording = not recording
-    alert["recording"] = true
-    alert["recording_frame"] = 1
-    if recording == true then
-      local record_path = make_filename()
-      recording_time = 0
-      alert["recording_message"] = messages["start_recording"]
-      print("recording to file " .. record_path)
-      engine.record_start(record_path)
-    else
-      alert["recording_message"] = messages["stop_recording"]
-      engine.record_stop(1)
+  if n == 1 and z == 1 then
+      alt = true
+  elseif z == 0 then
+    if n == 1 then
+      alt = false
     end
-  elseif n == 3 and z == 1 then
-    playing = not playing
-    alert["casting"] = true
-    alert["casting_frame"] = 1
-    if playing == true then
-      play_drone()
-      alert["casting_message"] = messages["start_casting"]
-    else
-      engine.stop(1)
-      alert["casting_message"] = messages["stop_casting"]
+    if n == 2 then
+      recording = not recording
+      alert["recording"] = true
+      alert["recording_frame"] = 1
+      if recording == true then
+        local record_path = make_filename()
+        recording_time = 0
+        alert["recording_message"] = messages["start_recording"]
+        print("recording to file " .. record_path)
+        engine.record_start(record_path)
+      else
+        alert["recording_message"] = messages["stop_recording"]
+        engine.record_stop(1)
+      end
+    elseif n == 3 then
+      playing = not playing
+      alert["casting"] = true
+      alert["casting_frame"] = 1
+      if playing == true then
+        play_drone()
+        alert["casting_message"] = messages["start_casting"]
+      else
+        engine.stop(1)
+        alert["casting_message"] = messages["stop_casting"]
+      end
     end
   end
   redraw()
