@@ -7,18 +7,7 @@
 --
 --
 -- ................................................................
--- contributors:
--- "Mt. Zion" by @license
--- "Supersaw" by @cfd90
--- "Mt. Lion" by @license
--- ................................................................
--- borrowings:
--- levels/fx parameter code by
--- @21echoes via pedalboard
--- ................................................................
 -- l.llllllll.co/dronecaster
--- <3 @tyleretters & @license
--- v0.0.6-beta
 
 -- engines & includes
 --------------------------------------------------------------------------------
