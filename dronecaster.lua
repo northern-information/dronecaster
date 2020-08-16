@@ -7,18 +7,7 @@
 --
 --
 -- ................................................................
--- contributors:
--- "Mt. Zion" by @license
--- "Supersaw" by @cfd90
--- "Mt. Lion" by @license
--- ................................................................
--- borrowings:
--- levels/fx parameter code by
--- @21echoes via pedalboard
--- ................................................................
 -- l.llllllll.co/dronecaster
--- <3 @tyleretters & @license
--- v0.0.6-beta
 
 -- engines & includes
 --------------------------------------------------------------------------------
@@ -209,6 +198,7 @@ function cleanup()
   -- Put user's audio settings back where they were
   params:set('monitor_level', initital_monitor_level)
   params:set('reverb', initital_reverb_onoff)
+  engine.stop(1)
   engine.record_stop(1)
 end
 
