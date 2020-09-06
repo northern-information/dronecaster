@@ -1,7 +1,7 @@
 // @license
 // Roars through a twisting canyon.
 {
-    arg out, hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
+    arg hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
     var amp_ = amp.lag(amplag);
     var hz_ = hz.lag(hzlag);
     var voiceCount = 9;
@@ -29,5 +29,5 @@
         rand.(0.1, maxAmp)
         )
     });
-    Out.ar(out, LeakDC.ar(Mix.ar(voices)));
+	LeakDC.ar(Mix.ar(voices))
 }
