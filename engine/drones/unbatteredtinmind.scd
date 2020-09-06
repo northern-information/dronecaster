@@ -73,8 +73,11 @@ var synthFunc = {
 			LFNoise2.kr(1/basePeriod, 0.1 + 0.2.rand, 0.5 + 0.5.rand));
 
 		del = CombC.ar(snd, 0.5, 16.0/hz * LFNoise2.ar(0.125/basePeriod, 0.01, 1), basePeriod * 8);
+		del = LeakDC.ar(del).tanh;
 		// comb with a negative decay time, emphasizing odd harmonics 8vb
 		delNeg = CombC.ar(snd, 0.5, 4.0/hz * LFNoise2.ar(0.125/basePeriod, 0.01, 1), basePeriod * -8);
+		delNeg = LeakDC.ar(delNeg).tanh;
+		snd = LeakDC.ar(snd).tanh;
 		panRate = 1/(basePeriod) * geoWrap.value((i+1)*4.33, 2.0, 0.5);
 		Mix.new([
 			Pan2.ar(snd, SinOsc.ar(panRate, ((i+1)*pi/4.33).wrap(pi, 8*pi), panWidth), 0.5),
@@ -85,7 +88,7 @@ var synthFunc = {
 
 	snd = Mix.new(snd.flatten.clump(2));
 	snd = snd + RLPF.ar(snd, hz * 0.5, 0.2);
-	snd = (snd + [Normalizer.ar(snd[0]), Normalizer.ar(snd[1])]/2) * amp * 0.25;
+	snd = (snd + [Normalizer.ar(snd[0]), Normalizer.ar(snd[1])]/2) * amp * 0.5;
 	snd.flatten
 };
 
