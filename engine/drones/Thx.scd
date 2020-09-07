@@ -2,10 +2,10 @@
 // THX
 // http://earslap.com/article/recreating-the-thx-deep-note.html
 {
-    arg out, hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
+    arg hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
     var amp_ = Lag.ar(K2A.ar(amp), amplag);
     var hz_ = Lag.ar(K2A.ar(hz), hzlag);
-    
+
     var numVoices = 12;
     var fundamentals = ({rrand(100.0, 500.0)}!numVoices).sort.reverse;
     var finalPitches =  (numVoices.collect({|nv| hz_*(2**((nv/2).round-3)); }));
@@ -22,5 +22,5 @@
             ((1 - (1/(numTone + 1)))**4) +0.4
         ) / numVoices
     });
-    Out.ar(out,Mix.ar(voices));
+    Mix.ar(voices);
 }
