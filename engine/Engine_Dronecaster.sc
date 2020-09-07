@@ -48,8 +48,7 @@ Dronecaster {
 	}
 
 	stop {
-		// why would you want to stop?
-		socket.free;
+		socket.stop;
 	}
 
 	record { arg path;
@@ -96,7 +95,7 @@ Engine_Dronecaster : CroneEngine {
 		});
 
 		this.addCommand("stop", "i", { arg msg;
-			caster.stop;
+			caster.stop(msg[1]);
 		});
 
 		this.addCommand("start", "s", { arg msg;

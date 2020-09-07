@@ -58,21 +58,19 @@ Dronecaster_SynthSocket {
 			}.play(target:group, args:[\bus, controlBus[name].index]);
 		});
 
-		fadeSynth = {
-			arg out=0, in0, in1, gate, time=4;
-			var sourceIdx, fade, snd;
-			fade = [
-				EnvGen.ar(Env.asr(time, 1, time), 1-gate),
-				EnvGen.ar(Env.asr(time, 1, time), gate)
-			];
-			snd = (In.ar(in0, 2) * fade[0]) + (In.ar(in1, 2) * fade[1]);
-			Out.ar(out, snd)
-		}.play(target:group, args: [
-			\out, out,
-			\in0, inBus[0].index,
-			\in1, inBus[1].index,
-			\time, fadeTime
-		]);
+		fadeSynth = Array.fill(2, { arg i;
+			{
+				arg out=0, in, gate, time=4;
+				var fade, snd;
+				fade = EnvGen.ar(Env.asr(time, 1, time), gate);
+				snd = fade * In.ar(in, 2);
+				Out.ar(out, snd)
+			}.play(target:group, args: [
+				\out, out,
+				\in, inBus[i].index,
+				\time, fadeTime
+			]);
+		});
 	}
 
 	setSource { arg newFunction;
@@ -85,7 +83,7 @@ Dronecaster_SynthSocket {
 
 	setFadeTime { arg time;
 		fadeTime = time;
-		fadeSynth.set(\time, fadeTime);
+		fadeSynth.do({ arg synth; synth.set(\time, fadeTime); });
 	}
 
 	setControl { arg key, value;
@@ -94,6 +92,10 @@ Dronecaster_SynthSocket {
 
 	setControlLagTime { arg time;
 		controlLag.do({ arg synth; synth.set(\time, time); });
+	}
+
+	stop {
+		fadeSynth.do({ arg synth; synth.set(\gate, 0); });
 	}
 
 	free {
@@ -107,7 +109,7 @@ Dronecaster_SynthSocket {
 
 	performFade { arg newFunction, args;
 		sourceIndex = if (sourceIndex > 0, {0}, {1});
-		postln("performing fade; new source index = " ++ sourceIndex);
+		// postln("performing fade; new source index = " ++ sourceIndex);
 
 		isFading = true;
 
@@ -118,8 +120,8 @@ Dronecaster_SynthSocket {
 			sourceLast = source;
 			source = newFunction.play(
 				outbus:inBus[sourceIndex].index,
-				target:fadeSynth,
-				addAction:\addBefore
+				target:group,
+				addAction:\addToHead // <- important
 			);
 
 			server.sync;
@@ -136,7 +138,8 @@ Dronecaster_SynthSocket {
 				})
 			});
 
-			fadeSynth.set(\gate, sourceIndex);
+			fadeSynth[sourceIndex].set(\gate, 1);
+			fadeSynth[1-sourceIndex].set(\gate, 0);
 
 			(fadeTime + 0.001).wait;
 			this.finishFade;
