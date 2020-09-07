@@ -1,75 +1,125 @@
- Engine_Dronecaster : CroneEngine {
-  var synth;
-  var drones;
-  var droneGroup;
-  var inJacks, recordBus, recorder;
-  var hz = 55, amp = 0.4;
+// "kernel" class, norns-agnostic
+Dronecaster {
+	var <drones;
+	// use a NodeProxy to crossfade drones without boilerplate
+	var <proxy;
+	var inJacks, recordBus, <recorder;
+	var amp, hz;
 
-  *new { arg context, doneCallback;
-    ^super.new(context, doneCallback);
-  }
+	*new { arg server, baseDronePath;
+		^super.new.init(server, baseDronePath)
+	}
 
-  alloc {
-    var baseDronePath = "/home/we/dust/code/dronecaster/engine/drones";
-    var luaOsc = NetAddr("localhost", 10111);
+	init { arg server, baseDronePath;
+		if (baseDronePath == nil, {
+			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
+		});
+		postln("searching for drones at: " ++ baseDronePath);
+		drones = PathName.new(baseDronePath).entries.collect({|e|
+			var name = e.fileNameWithoutExtension;
+			e.fileNameWithoutExtension -> e.fullPath.load
+		});
 
-    droneGroup = Group.new(context.xg);
+		drones.postln;
+		drones = Dictionary.with(*drones);
 
-    drones = PathName.new(baseDronePath).entries.collect({|e| 
-      var name = e.fileNameWithoutExtension;
-      ("sending name: " ++ name).postln;
-      luaOsc.sendMsg("/add_drone", name);
-      e.fileNameWithoutExtension -> e.fullPath.load;
-    });
-    drones.postln;
-    drones = Dictionary.with(*drones);
+		proxy = NodeProxy.audio(server, 2);
 
-    recordBus = Bus.audio(Crone.server, 2);
-    // Leave it running silently - it's low-CPU & there's less juggling
-    inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
-    recorder = Recorder.new(Crone.server);
+		proxy.play;
 
-    context.server.sync;
-    
-    this.addCommand("hz", "f", { arg msg;
-      hz = msg[1];
-      if (synth != nil, { synth.set(\hz, hz) });
-    });
-    
-    this.addCommand("amp", "f", { arg msg;
-      amp = msg[1];
-      if (synth != nil, { synth.set(\amp, amp) });
-    });
-    
-    this.addCommand("stop", "i", { arg msg;
-        droneGroup.freeAll;
-    });
-    
-    this.addCommand("start", "s", { arg msg; 
-      var drone, droneName;
+		// these things could be parameterized
+		proxy.fadeTime = 8.0;
+		proxy.lag(\amp, 1.0);
+		proxy.lag(\hz, 1.0);
 
-      droneGroup.freeAll; // Unload any playing synth
-      droneName = msg[1].asString;
-      droneName.postln;
-      drone = drones[droneName];
+		recordBus = Bus.audio(server, 2);
+		inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
+		recorder = Recorder.new(server);
+	}
 
-      if (drone != nil, {
-        synth = drone.play(droneGroup, context.out_b, args: [hz: hz, amp: amp]);
-      });
-    });
+	start { arg name;
+		if (proxy.isPlaying.not, { proxy.play; });
+		if (drones.keys.includes(name), {
+			proxy.source = drones[name];
+		}, {
+			postln("dronecaster does not know this drone: " ++ name);
+		});
+	}
 
-    this.addCommand("record_start", "s", { arg msg;
-      var path = msg[1].asString;
-      recorder.record(path, recordBus, 2);
-    });
+	setAmp { arg value;
+		amp = value; proxy.set(\amp, amp);
+	}
 
-    this.addCommand("record_stop", "i", { arg msg;
-      recorder.stopRecording;
-    });
-  }
+	setHz{ arg value;
+		amp = value; proxy.set(\hz, hz);
+	}
 
-  free {
-    droneGroup.freeAll;
-    inJacks.free;
-  }
+	stop {
+		proxy.free;
+	}
+
+	record { arg path;
+		recorder.record(path.asString, recordBus, 2);
+	}
+
+	free {
+		inJacks.free;
+		recorder.free;
+		proxy.clear;
+	}
+}
+
+// norns glue
+Engine_Dronecaster : CroneEngine {
+	classvar luaOscPort = 10111;
+
+	var caster; // a Dronecaster
+	*new { arg context, doneCallback;
+		^super.new(context, doneCallback);
+	}
+
+	alloc {
+		var luaOscAddr = NetAddr("localhost", luaOscPort);
+
+		//  :/
+		caster = Dronecaster.new(context.server, "/home/we/dust/code/dronecaster/engine/drones" );
+
+		caster.drones.keys.do({ arg name;
+			("sending name: " ++ name).postln;
+			luaOscAddr.sendMsg("/add_drone", name);
+		});
+
+		this.addCommand("hz", "f", { arg msg;
+			caster.setHz(msg[1].asFloat);
+		});
+
+		this.addCommand("amp", "f", { arg msg;
+			caster.setAmp(msg[1].asFloat);
+		});
+
+		this.addCommand("fade", "f", { arg msg;
+			caster.proxy.fadeTime = msg[1].asFloat;
+		});
+
+		this.addCommand("stop", "i", { arg msg;
+			caster.stop;
+		});
+
+		this.addCommand("start", "s", { arg msg;
+			caster.setDrone(msg[1].asString);
+		});
+
+		this.addCommand("record_start", "s", { arg msg;
+			caster.record(msg[1]);
+		});
+
+		this.addCommand("record_stop", "i", { arg msg;
+			// fugly
+			caster.recorder.stopRecording;
+		});
+	}
+
+	free {
+		caster.free;
+	}
 }
