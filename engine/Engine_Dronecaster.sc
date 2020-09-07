@@ -18,10 +18,9 @@ Dronecaster {
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
-			drones[e.fileNameWithoutExtension] = e.fullPath.load
+			drones[name] = e.fullPath.load
 		});
 		drones.postln;
-		drones = Dictionary.with(*drones);
 
 		socket = Dronecaster_SynthSocket.new(server, 0, [\amp, \hz]);
 
@@ -43,8 +42,8 @@ Dronecaster {
 		socket.setControl(\amp, amp);
 	}
 
-	setHz{ arg value;
-		amp = value;
+	setHz { arg value;
+		hz = value;
 		socket.setControl(\hz, hz);
 	}
 
@@ -109,7 +108,6 @@ Engine_Dronecaster : CroneEngine {
 		});
 
 		this.addCommand("record_stop", "i", { arg msg;
-			// fugly
 			caster.recorder.stopRecording;
 		});
 	}

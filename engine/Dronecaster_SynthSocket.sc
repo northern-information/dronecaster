@@ -121,6 +121,7 @@ Dronecaster_SynthSocket {
 				target:fadeSynth,
 				addAction:\addBefore
 			);
+
 			server.sync;
 
 			controls.do({ arg key;
