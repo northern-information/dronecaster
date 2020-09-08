@@ -1,8 +1,7 @@
 // "kernel" class, norns-agnostic
 Dronecaster {
 	var <drones;
-	// use a NodeProxy to crossfade drones without boilerplate
-	var <proxy;
+	var <socket; // a Dronecaster_SynthSocket
 	var inJacks, recordBus, <recorder;
 	var amp, hz;
 
@@ -15,22 +14,15 @@ Dronecaster {
 			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
 		});
 		postln("searching for drones at: " ++ baseDronePath);
-		drones = PathName.new(baseDronePath).entries.collect({|e|
+
+		drones = Dictionary.new;
+		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
-			e.fileNameWithoutExtension -> e.fullPath.load
+			drones[name] = e.fullPath.load
 		});
-
 		drones.postln;
-		drones = Dictionary.with(*drones);
 
-		proxy = NodeProxy.audio(server, 2);
-
-		proxy.play;
-
-		// these things could be parameterized
-		proxy.fadeTime = 8.0;
-		proxy.lag(\amp, 1.0);
-		proxy.lag(\hz, 1.0);
+		socket = Dronecaster_SynthSocket.new(server, 0, [\amp, \hz]);
 
 		recordBus = Bus.audio(server, 2);
 		inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
@@ -38,24 +30,25 @@ Dronecaster {
 	}
 
 	start { arg name;
-		if (proxy.isPlaying.not, { proxy.play; });
 		if (drones.keys.includes(name), {
-			proxy.source = drones[name];
+			socket.setSource(drones[name]);
 		}, {
 			postln("dronecaster does not know this drone: " ++ name);
 		});
 	}
 
 	setAmp { arg value;
-		amp = value; proxy.set(\amp, amp);
+		amp = value;
+		socket.setControl(\amp, amp);
 	}
 
-	setHz{ arg value;
-		amp = value; proxy.set(\hz, hz);
+	setHz { arg value;
+		hz = value;
+		socket.setControl(\hz, hz);
 	}
 
 	stop {
-		proxy.free;
+		socket.stop;
 	}
 
 	record { arg path;
@@ -65,7 +58,7 @@ Dronecaster {
 	free {
 		inJacks.free;
 		recorder.free;
-		proxy.clear;
+		socket.free;
 	}
 }
 
@@ -98,11 +91,11 @@ Engine_Dronecaster : CroneEngine {
 		});
 
 		this.addCommand("fade", "f", { arg msg;
-			caster.proxy.fadeTime = msg[1].asFloat;
+			caster.socket.setFadeTime(msg[1].asFloat);
 		});
 
 		this.addCommand("stop", "i", { arg msg;
-			caster.stop;
+			caster.stop(msg[1]);
 		});
 
 		this.addCommand("start", "s", { arg msg;
@@ -114,7 +107,6 @@ Engine_Dronecaster : CroneEngine {
 		});
 
 		this.addCommand("record_stop", "i", { arg msg;
-			// fugly
 			caster.recorder.stopRecording;
 		});
 	}

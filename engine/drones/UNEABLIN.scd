@@ -18,7 +18,6 @@
 		Pan2.ar(sines[i], SinOscFB.ar(1/dt, LFNoise2.ar(1/dt, 2, 2)))
 	});
 	snd = Mix.new(snd);
-	snd.postln;
 	snd = RLPF.ar(snd, (hz*16).min(SampleRate.ir/2), LFNoise2.ar(1/dt, 0.3, 0.31));
 	snd * amp
 }

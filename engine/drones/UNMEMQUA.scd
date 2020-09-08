@@ -23,6 +23,6 @@
 	], excite, hz, 0, 1/hz * decayRatio);
 	snd = Mix.new(klank.flatten.clump(2))*amp;
 	snd = snd + RLPF.ar(excite, Array.fill(2, {hz * 0.5 * LFNoise2.ar(1/23, 0.5, 1.25)}), rlpfAmp);
-	snd = Limiter.ar((snd + snd.tanh)* 0.5 * 0.4);
+	snd = Limiter.ar((snd + snd.tanh)* 0.5 * 0.4 * 0.12);
 	Mix.new(snd)
 }

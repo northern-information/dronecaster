@@ -57,10 +57,10 @@
 		blips[i].ring2(saws.wrapAt(i+1));
 	});
 
-	snd = (blips + saws/2 + (ring * LFNoise2.kr(1/dt)))/2;
+	snd = (blips + saws/2 + (ring * 0.3 * LFNoise2.kr(1/dt)))/2;
 	snd = Mix.new((snd + RLPF.ar(snd, hz * [0.25, 0.5] + LFNoise2.ar(1/dt, 0.5), 0.2 + LFNoise2.ar(1/dt, 0.1))).clump(2));
 
 	gnar = Normalizer.ar(RLPF.ar(Pulse.ar(hz * 0.25).distort, hz, 0.7));
 
-	(snd*0.9 + gnar*1.2) * amp
+	(snd*0.9 + gnar*0.8) * amp
 }
