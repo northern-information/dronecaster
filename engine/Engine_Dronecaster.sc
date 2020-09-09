@@ -99,7 +99,7 @@ Engine_Dronecaster : CroneEngine {
 		});
 
 		this.addCommand("start", "s", { arg msg;
-			caster.setDrone(msg[1].asString);
+			caster.start(msg[1].asString);
 		});
 
 		this.addCommand("record_start", "s", { arg msg;
