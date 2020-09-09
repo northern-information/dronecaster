@@ -16,7 +16,7 @@
 	f = (f ++ (f * 13) ++ (f * 23)).flatten;
 	f = f.collect({|x| var y=x; while({y>4}, {y = y / 2}); y});
 
-	klank = DynKlank.ar(`[L
+	klank = DynKlank.ar(`[
 		f,
 		Array.geom(f.size, 1.0, 0.94),
 		Array.rand(f.size, 0, pi)
