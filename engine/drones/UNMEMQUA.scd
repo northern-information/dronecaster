@@ -16,13 +16,13 @@
 	f = (f ++ (f * 13) ++ (f * 23)).flatten;
 	f = f.collect({|x| var y=x; while({y>4}, {y = y / 2}); y});
 
-	klank = DynKlank.ar(`[
+	klank = DynKlank.ar(`[L
 		f,
 		Array.geom(f.size, 1.0, 0.94),
 		Array.rand(f.size, 0, pi)
 	], excite, hz, 0, 1/hz * decayRatio);
-	snd = Mix.new(klank.flatten.clump(2))*amp;
-	snd = snd + RLPF.ar(excite, Array.fill(2, {hz * 0.5 * LFNoise2.ar(1/23, 0.5, 1.25)}), rlpfAmp);
-	snd = Limiter.ar((snd + snd.tanh)* 0.5 * 0.4 * 0.12);
+	snd = Mix.new(klank.flatten.clump(2));
+	snd = snd + RLPF.ar(excite, Array.fill(2, {|i| [hz*(1+(1-i)), hz/(i+2)] * 0.5 * LFNoise2.ar(1/23, 0.5, 1.25)}), rlpfAmp);
+	snd = Limiter.ar(snd + (snd.tanh * 0.5), 1.0, 0.5) * amp;
 	Mix.new(snd)
 }
