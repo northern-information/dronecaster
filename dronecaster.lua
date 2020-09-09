@@ -71,6 +71,8 @@ function init()
   params:set_action("hz", engine.hz)
   params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone"))
   params:set_action("drone", play_drone)
+  engine.amp(amp_default)
+  engine.hz(hz_default)
 end
 
 function the_sands_of_time()
