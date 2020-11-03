@@ -19,6 +19,9 @@ draw = include "lib/draw"
 local initital_monitor_level
 local initital_reverb_onoff
 
+version_major = 1
+version_minor = 0
+version_patch = 0
 filename_prefix = "dronecaster_"
 save_path = _path.audio .. "dronecaster/"
 amp_default = .4
