@@ -26,6 +26,8 @@ filename_prefix = "dronecaster_"
 save_path = _path.audio .. "dronecaster/"
 amp_default = .4
 hz_default = 55
+hz_base = 55
+crow_cv = 1
 drone_default = 1
 drones = {}
 recording = false
@@ -63,6 +65,10 @@ function init()
   if util.file_exists(save_path) == false then
     util.make_dir(save_path)
   end
+  
+  crow.input[1].mode("stream", .01)
+  crow.input[1].stream = process_crow_cv_a
+  
   counter.time = 1
   counter.count = -1
   counter.play = 1
@@ -71,7 +77,9 @@ function init()
   params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
   params:set_action("amp", engine.amp)
   params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
-  params:set_action("hz", engine.hz)
+  -- params:set_action("hz", engine.hz)
+  params:set_action("hz", hz_base_update)
+
   params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone"))
   params:set_action("drone", play_drone)
   engine.amp(amp_default)
@@ -206,5 +214,18 @@ function cleanup()
   engine.stop(1)
   engine.record_stop(1)
 end
+
+function hz_base_update(n)
+  hz_base = n
+  engine.hz(hz_base * crow_cv)
+end
+
+function process_crow_cv_a(v)
+  -- print("input stream: "..v)
+  -- print(v)
+  crow_cv = 2 ^ ((v + 1) - 1)
+  engine.hz(hz_base * crow_cv)
+end
+
 
 osc.event = osc_in -- should probably go in init? race conditions tho?
