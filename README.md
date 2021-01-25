@@ -1,3 +1,7 @@
+# dronecaster
+
+![Latest Release](https://img.shields.io/github/v/release/northern-information/dronecaster?sort=semver&color=%23f)
+
 ![dronecaster](img/dronecaster.png)
 
 ![dronecaster](img/instructions.png)
