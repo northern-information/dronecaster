@@ -13,9 +13,9 @@
 			SinGrain.ar(
 				Pulse.ar(10),
 				2 * i + lorenz,
-				hz_ + (i * lorenz),
+				hz + (i * lorenz),
 				EnvGen.kr(Env([0, 0.5, 0], [SinOsc.kr(0.1 * i + lorenz, 0, 1), SinOsc.kr(0.1 * i + lorenz, 0, 1)], \sin, 1, 2))),
-			hz_ + (10 * i * lorenz) * 0.5,
+			hz + (10 * i * lorenz) * 0.5,
 			0.05,
 			0.5,
 			0.0,
