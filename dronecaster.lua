@@ -11,6 +11,7 @@
 --------------------------------------------------------------------------------
 engine.name = "Dronecaster"
 draw = include "lib/draw"
+local MusicUtil=require "musicutil"
 
 -- variables
 --------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ function init()
   params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
   -- params:set_action("hz", engine.hz)
   params:set_action("hz", hz_base_update)
-  params:add_control("midi", "midi", controlspec.new(0, 120, "lin", 0, 24, "",1/120))
+  params:add{type="number",id="note",name="note",min=0,max=127,default=24,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
   params:set_action("midi",function(v)
     params:set("hz",math.pow(2,(v-69)/12)*440)
   end)
