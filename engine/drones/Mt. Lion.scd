@@ -1,13 +1,11 @@
 // @license
 // Roars through a twisting canyon.
 {
-    arg hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
-    var amp_ = amp.lag(amplag);
-    var hz_ = hz.lag(hzlag);
+    arg hz,amp;
     var voiceCount = 9;
-    var baseNote = hz_.cpsmidi.round;
-    var noteDetune = (baseNote - hz_.cpsmidi).abs;
-    var maxAmp = amp_ / voiceCount;
+    var baseNote = hz.cpsmidi.round;
+    var noteDetune = (baseNote - hz.cpsmidi).abs;
+    var maxAmp = amp / voiceCount;
 
     var rand = ({|sampleFreq=1, mul=1, add=0, lag=0.5|
         Latch.kr(WhiteNoise.kr(mul, add), Dust.kr(sampleFreq)).lag(lag)
