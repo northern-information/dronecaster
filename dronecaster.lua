@@ -203,6 +203,7 @@ function osc_in(path, msg)
     print("adding drone" .. msg[1])
     table.insert(drones, msg[1])
   end
+  table.sort(drones)
 end
 
 function cleanup()
