@@ -36,7 +36,7 @@ Dronecaster {
 			    var amp_, hz_;
 			    amp_ = Lag.ar(K2A.ar(amp), amplag);
 			    hz_ = Lag.ar(K2A.ar(hz), hzlag);
-			    drones[name].value(hz_,amp_);
+			    drones[name].value(hz:hz_,amp:amp_);
 			});
 		}, {
 			postln("dronecaster does not know this drone: " ++ name);
