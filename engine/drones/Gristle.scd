@@ -3,7 +3,7 @@
 // a primal sawtooth
 
 {
-    arg hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
+    arg hz=440, amp=0.02;
 	var sig = Mix.ar(
 			VarSaw.ar(
 			freq:hz*Array.fill(3,{arg i;
