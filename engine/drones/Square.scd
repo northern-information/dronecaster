@@ -3,9 +3,6 @@
 // Big sister, opinionated on her pulsewidth, but reasonable.
 
 {
-    arg hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
-    var amp_, hz_;
-    amp_ = Lag.ar(K2A.ar(amp), amplag);
-    hz_ = Lag.ar(K2A.ar(hz), hzlag);
-    (Pulse.ar(hz_, 0.5) * amp_).dup;
+    arg hz, amp;
+    (Pulse.ar(hz, 0.5) * amp).dup;
 }

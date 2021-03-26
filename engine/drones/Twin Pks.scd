@@ -1,13 +1,10 @@
 // Retro stylings, timeless horror
 {
-	arg hz=55.1, amp=0.02, amplag=0.02, hzlag=0.01;
+	arg hz,amp;
 
-	var amp_, hz_, wet, drive, ratio, threshold, gain,
+	var wet, drive, ratio, threshold, gain,
 	wow, minWowRate, wowRate, maxDepth, maxLfoDepth, depth, depthLfoAmount, wowMul, maxDelay,
 	tone, bitRate, noiseSignal;
-
-	amp_ = amp.lag(amplag);
-	hz_ = hz.lag(hzlag);
 
 	// Tape/Vinyl-esque noise as our main original signal
 	wet = (Dust2.ar(10, 1) + Crackle.ar(1.95, 0.2) + SinOsc.ar((PinkNoise.ar(0.5) * 7500) + 40, 0, 0.04));
@@ -23,7 +20,7 @@
 	wet = Limiter.ar(Compander.ar(wet, wet, threshold, 1.0, ratio, 0.1, 1, gain), dur: 0.0008);
 
 	// Bandpass it at Hz
-	wet = BPF.ar(wet, hz_, 0.4);
+	wet = BPF.ar(wet, hz, 0.4);
 
 	// Wow aka flutter aka warble
 	wow = \wow.kr(0.6);
@@ -49,10 +46,10 @@
 	wet = (Decimator.ar(wet, 24000, 16) * 0.33) + (wet * 0.67);
 
 	// Bandpass it at Hz again
-	wet = BPF.ar(wet, hz_, 0.4);
+	wet = BPF.ar(wet, hz, 0.4);
 
 	// Typically we're at about -24db at this point, so get back to 0
-	wet = (wet * 24.dbamp * amp_).softclip;
+	wet = (wet * 24.dbamp * amp).softclip;
 
 	wet.dup;
 }

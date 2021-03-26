@@ -31,7 +31,13 @@ Dronecaster {
 
 	start { arg name;
 		if (drones.keys.includes(name), {
-			socket.setSource(drones[name]);
+			socket.setSource({
+			    arg hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
+			    var amp_, hz_;
+			    amp_ = Lag.ar(K2A.ar(amp), amplag);
+			    hz_ = Lag.ar(K2A.ar(hz), hzlag);
+			    drones[name].value(hz:hz_,amp:amp_);
+			});
 		}, {
 			postln("dronecaster does not know this drone: " ++ name);
 		});
