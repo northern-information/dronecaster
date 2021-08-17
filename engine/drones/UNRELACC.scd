@@ -1,27 +1,28 @@
 // @zebra
+//z =
 {
-	arg hz=110, amp=0.1, hzRatio=2.0,
-	 aMin=1.0, aMax=1.3,
-	 bMin=0.1, bMax=0.3;
+	arg hz=110, amp=1.0, hzRatio=2.0;
 	var snd;
-	var aArr, bArr;
-	// defines tonality:
-	var ratios = [0.5, 1, 2, 15/8, 6/5];
-	//
-	aArr = Array.fill(ratios.size, {LFNoise2.ar(1/19).linlin(-1, 1, aMin, aMax)});
-	bArr = Array.fill(ratios.size, {LFNoise2.ar(1/29).linlin(-1, 1, bMin, bMax)});
-	snd = ratios.size.collect({
-		arg i;
+	var aaa, bbb;
+	var ratios = [0.5, 1, 4/3, 7/4, 2, 12/5];
+	var amps = [0, 0, 0, -5, -4, -7].dbamp;
+	hz = (hz*2).lag(4);
+	aaa = ratios.collect({|r,i| LFTri.kr(1/(r*9)).linlin(-1, 1, 1.01, 1.2)});
+	bbb = ratios.collect({|r,i| LFTri.kr(1/(r*8)).linlin(-1, 1, 0.11, 0.214)});
+	snd = ratios.collect({
+		arg r, i;
 		Pan2.ar(
-			HenonL.ar(
-				hz * hzRatio * ratios + LFNoise2.ar(1/14, 0.4),
-				aArr[i], bArr[i], 0, 0.1
+			HenonC.ar(
+				hz * hzRatio * r + LFSaw.kr((i+1)*(i+2)/14*(i*3), 0.04),
+				aaa[i], bbb[i], 0, 0.7
 			),
-			SinOsc.ar(1/31, (i*14).wrap(0, pi))
-		)
+			SinOsc.ar((i+1)/31, (i*14).wrap(0, pi), 0.77)
+		) * amps[i]
 	});
-	snd = LeakDC.ar(snd);
+	snd = LeakDC.ar(snd, 0.994);
 	snd = Mix.new(snd.flatten.clump(2));
-	snd = (RLPF.ar(snd, hz*6) + RLPF.ar(Normalizer.ar(snd.tanh), hz * 0.5, 0.2));
-	snd * amp * 0.5
+	snd = snd * amp * -6.dbamp * Linen.kr(attackTime:6.66);
+	// Peak.kr(Amplitude.kr(snd)).ampdb.poll;
+	snd;
 }
+//.play(s);
