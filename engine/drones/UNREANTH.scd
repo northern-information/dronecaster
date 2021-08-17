@@ -1,5 +1,5 @@
 // @zebra
-z =
+//z =
 {
 	arg hz=220, amp=1.0;
 	var seqbuf, seqwr, seqrd;
@@ -84,6 +84,6 @@ z =
 	snd * Linen.kr(attackTime:12)
 
 }
-.play(s);
+//.play(s);
 //
 //z.set(\hz, 440*2);
