@@ -1,5 +1,5 @@
 // @zebra
-z =
+//z =
 {
 	arg hz=110, amp=1, dt=43;
 	var delbuf= LocalBuf.new(SampleRate.ir * 8.0);
@@ -19,7 +19,7 @@ z =
 
 	sines = ratios.collect({ arg r, i;
 		var x = SinOsc.ar(hz * r + [r*0.25, r* -0.25], phase.wrapAt(i+2), amps[i]);
-		var dst = (3*x*0.5) - 0.5*(x*x*x);
+		var dst = (3*x*0.5) - 0.5*(x.cubed);
 		SelectX.ar(LFTri.kr(1/dt * (r+i/16), i/n).abs, [x, dst]);
 	});
 
@@ -36,6 +36,6 @@ z =
 	//Peak.kr(Amplitude.kr(snd)).ampdb.poll;
 	snd;
 }
-.play(s);
+//.play(s);
 
 //z.set(\hz, 330);

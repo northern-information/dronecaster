@@ -1,69 +1,89 @@
 // @zebra
-// z =
+z =
 {
 	arg hz=220, amp=1.0;
-	var dt = 47;
-	var n = 6;
-	var blips, saws, ring, snd, gar;
+	var seqbuf, seqwr, seqrd;
+	var dt, ph, rst, rat, twr, trd;
+	var n=64, m=17;
+	var r1, r2;
+	var scl = [
+		1,
+		20/9,
+		//9/8,
+		6/5,
+		//5/4,
+		8/3,
+		3,
+		8/5,
+		//5/3,
+		//9/5,
+		//15/8,
+		7/4,
+		2,
+		4,
+		9/4
+	];
+	var deg, prat, freq;
+	var sines, sinemix, delbuf, del, dst;
+	var saws, ring;
+	var snd;
 
-	var sloth = {
-		arg dt=10, ddt=30, min=0, max=1, ddtscale=1.0;
-		var hzhz = 1/ddt;
-		var hz = (1/dt) * LFNoise2.kr(hzhz, ddtscale, ddtscale*0.5);
-		var c = (max-min)*0.5; // tmp
-		LFNoise2.kr(hz, c, c+min)
-	};
+	hz = hz.lag(5.5);
 
-	var stack = {
-		arg base, // center frequency
-		n,        // number of voices
-		m,        // number of sub-octaves
-		dhz=2,
-		dt=10, ddt=100;
+	//--- sequence
+	r1 = [3/2, 12/5, 16/5];
+	r2 = [1, 9/4, 5/2];
+	rat = 19/23;
+	rst = Impulse.kr(1/23);
+	seqbuf = LocalBuf(n);
+	dt = SinOscFB.kr(1/117, 11).linlin(-1,1,1/17,1/4) / 8;
+	ph = Phasor.kr(rst, rat, n);
+	twr = Pulse.kr(r1 / dt);
+	trd = Pulse.kr(r2 / dt);
+	seqwr = Demand.kr(twr, 0, Dbufwr(ph, seqbuf, Dseries(0, 1, n)));
+	seqrd = Demand.kr(trd, 0, Dbufrd(seqbuf, ph + m));
+	deg = (seqrd / n * (scl.size - 0.01)).floor;
+	//deg.poll;
 
-		var oct = Array.geom(m, 2, 0.5); // sub octaves
-		var hz = Array.fill(n, {
-			var f = oct * base;
-			sloth.value(dt, ddt, f-dhz, f+dhz)
-		});
-		hz.flatten
-	};
-
-	var pair = {
-		arg hz,
-		mod=1.0, // modulation scale
-		hzMul=1.0,     // hz multiplier for cancelling saw
-		delRatio=0.5;  // inverse multiplier for phase offset
-		var car = Saw.ar(hz);
-		var inv = Saw.ar(hz * hzMul);
-		car - (mod * AllpassL.ar(inv, 0.1, delRatio/hz))
-	};
-
-	blips = Mix.new(
-		Blip.ar(
-			freq:stack.value(hz, 8, 3),
-			numharm: sloth.value(dt, dt*10, 1, 10, 2.0),
-		).clump(2)
-	);
-
-	saws = Mix.new(
-		pair.value(
-			hz: stack.value(hz, 8, 3),
-			mod: Array.fill(n, { sloth.value(dt, dt*10, 0.51, 0.99)}),
-			delRatio: Array.fill(n, {sloth.value(dt, dt*10, 0.55, 0.7)})
-		).clump(2)
-	);
-
-	ring = Array.fill(blips.size, { |i|
-		blips[i].ring2(saws.wrapAt(i+1));
+	//-- osc
+	sines = scl.collect({|r,i|
+		Array.fill(2, {|j|
+			SinOsc.ar(hz * r + j) * deg[j].eq(i).lag2ud(0.01, LFTri.kr(1/(1+i+j), j).linlin(-1,1, 1.7, 4.4))
+		})
 	});
+	sinemix = Mix.new(sines.flatten.clump(2)) / scl.size;
 
-	snd = (blips + saws/2 + (ring * 0.3 * LFNoise2.kr(1/(dt*7))))/2;
-	snd = Mix.new((snd + RLPF.ar(snd, hz * [0.25, 0.5] + LFNoise2.ar(1/dt, 0.5), 0.2 + LFNoise2.ar(1/dt, 0.1))).clump(2));
+	delbuf = Array.fill(2, {LocalBuf(9 * SampleRate.ir, 1)});
+	del = BufDelayC.ar(delbuf, LocalIn.ar(2), SinOscFB.ar(1/29, 1.7777, 0.1, [7, 8]));
+	del = Mix.new(del.flatten.clump(2));
 
-	gar = Normalizer.ar(RLPF.ar(Pulse.ar(hz * 0.25 + LFSaw.kr([1/17, 1/13], [0, 1], 0.2)).distort, hz, 0.7));
-	snd = snd*0.36 + gar*0.29 * amp * Linen.kr(attackTime:7.79);
-	// Peak.kr(Amplitude.kr(snd)).ampdb.poll;
-	snd
+	dst = sines.collect({ arg x, i;
+		var ax = x.abs;
+		var a = LFTri.kr((i+2)/(i+7), i % 2).linexp(-1, 1, 0.99, 0.01);
+		x * (ax + a) / (x * x + (a - 1) * ax + 1)
+	});
+	dst = Mix.new(dst) * 0.125;
+
+	del = del + PitchShift.ar(Mix.new(del), 0.57, [2, 4], 0.001, 0.23, 0.07);
+	del = LeakDC.ar(del * 0.5).softclip;
+
+	saws = (Mix.new(Saw.ar([hz + (1/77),hz/2-(1/66),hz-(1/51), hz/2+(1/86)]).flatten.clump(2)) * 0.124);
+	saws = SVF.ar(saws, hz*2, 0.05 + LFTri.kr(1/19, mul:0.04, add:0.04));
+
+	ring = DiodeRingMod.ar(sinemix, saws) * -14.dbamp;
+	ring = HPF.ar(ring, hz);
+
+	saws = saws + PitchShift.ar(saws, 0.77, 0.5, 0.002, 0.1);
+
+	snd = (sinemix + del + saws + ring) * 0.5 * amp;
+	snd = Mix.new(snd.flatten.clump(2));
+
+	LocalOut.ar(Mix.new((del.reverse + sinemix.reverse + ring).flatten.clump(2)));
+
+	//Peak.kr(Amplitude.kr(snd)).ampdb.poll;
+	snd * Linen.kr(attackTime:12)
+
 }
-//.play(s);
+.play(s);
+//
+//z.set(\hz, 440*2);
