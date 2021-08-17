@@ -1,29 +1,37 @@
 // @zebra
-//z =
+z =
 {
-	arg hz=110, amp=1, dt=66, modScale=7;
+	arg hz=110, amp=1, dt=43;
+	var delbuf= LocalBuf.new(SampleRate.ir * 8.0);
 
-	var ratios = [1, 3/2, 2, 6/5, 8/3, 12/5, 14/4, 1/2, 3/4, 1/4];
-	var amps = [2, -6, 0, -8, -9, -5, -10, -2, -7, -4].dbamp;
+	var ratios = [1, 3/2, 2, 6/5, 8/3, 3, 7/2, 1/2];
+	var amps = [2, -6, 0, -8, -9, -5, -10, -4].dbamp;
 	var n = ratios.size;
 	var fb = LocalIn.ar(n);
-	var mod = ratios.collect({|r| LFSaw.kr(1/(dt*r*7), modScale) });
+	var modscale = LFTri.kr(1/(dt*4), 0).squared * 0.34;
+	var mod = ratios.collect({|r, i| LFSaw.kr(1/(dt*r*7+i), i.linlin(0, n-1, 3, 0), modscale) });
 	var phase = ratios.collect({|r,i|
-		DelayL.ar(fb.wrapAt(i+1), 0.2, LFSaw.ar(1/(dt*r*4)).wrap(1/16, 0.19).lagud(0.0077, 0.0277)) * mod[i]
+		BufDelayL.ar(delbuf, fb.wrapAt(i+1), LFSaw.ar(1/(dt*r*4+i), i*2/n).linlin(-1, 1, 1/16, 7.99).lagud(0.0077, 0.0277)) * mod[i]
 	});
-	var sines = ratios.collect({ arg r, i;
-		SinOsc.ar(hz * r + [r*0.25, r* -0.25], phase.wrapAt(i+2), amps[i]);
-	});
+	var sines;
+	var rqmod;
 	var snd;
 
-	sines = Mix.new(sines.flatten.clump(n));
-	hz = hz.lag(4.0);
-	LocalOut.ar(sines.reverse);
-	snd = Array.fill(n, {arg i;
-		Pan2.ar(sines[i], SinOscFB.ar(1/dt, LFSaw.kr(1/(dt * ratios[i] * 8), i/n, 2, 2)))
+	sines = ratios.collect({ arg r, i;
+		var x = SinOsc.ar(hz * r + [r*0.25, r* -0.25], phase.wrapAt(i+2), amps[i]);
+		var dst = (3*x*0.5) - 0.5*(x*x*x);
+		SelectX.ar(LFTri.kr(1/dt * (r+i/16), i/n).abs, [x, dst]);
 	});
-	snd = RLPF.ar(snd, (hz*ratios*2), LFTri.kr(1/(dt * ratios * ratios.sum), 0.04, 0.2)) * amps;
-	 snd = Mix.new(snd.flatten.clump(2)) / n;
+
+	hz = hz.lag(4.0);
+	LocalOut.ar(sines);
+	snd = Array.fill(n, {arg i;
+		Pan2.ar(sines[i], SinOscFB.ar(1/dt, LFTri.kr(1/(dt * ratios[i]), i.linlin(0,n-1,1,7), 0.8)));
+	});
+	rqmod = LFTri.kr(1/(dt * ratios * ratios.sum), 0, 0.1, 0.34/amps.rotate(5));
+	//rqmod.poll;
+	snd = RLPF.ar(snd, (hz*ratios.rotate(1) * 2), rqmod);
+	snd = Mix.new(snd.flatten.clump(2)) / n;
 	snd = snd * amp * 0.3 * Linen.kr(attackTime:5.55);
 	//Peak.kr(Amplitude.kr(snd)).ampdb.poll;
 	snd;
