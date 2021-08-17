@@ -4,7 +4,7 @@
 	arg hz=110, amp=1.0, spring=0.253, damp=0.0088, decay=12.0, fbamt=0.88, crack=1.97;
 	var r1 = [0.25, 0.5, 1, 3, 2, 7/4, 10/4];
 	var r2 =[1, 3/2, 2, 9/4, 8/3, 14/4];
-	var sprng = Mix.new((DynKlank.ar(`[r1, (1/r1).min(1), r2], HPF.ar(Crackle.ar, 10), hz * [2,4], 0.125) / r1.size * -18.dbamp).flatten.clump(2));
+	var sprng = Mix.new((DynKlank.ar(`[r1, (1/r1).min(1), r2], HPF.ar(Crackle.ar, 10), hz * [2,4], 0.125) / r1.size * -23.dbamp).flatten.clump(2));
 	var plck = RLPF.ar(
 		Pulse.ar(hz * r1,
 			EnvGen.kr(Env.perc, Dust.kr(0.7), 0.2, 0.4, LFNoise1.kr([0.1, 0.1], 1.0, 2.0))
