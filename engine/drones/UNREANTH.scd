@@ -1,9 +1,10 @@
 // @zebra
+// z =
 {
-	arg hz=220, amp=0.125;
+	arg hz=220, amp=1.0;
 	var dt = 47;
 	var n = 6;
-	var blips, saws, ring, snd, gnar;
+	var blips, saws, ring, snd, gar;
 
 	var sloth = {
 		arg dt=10, ddt=30, min=0, max=1, ddtscale=1.0;
@@ -35,7 +36,7 @@
 		delRatio=0.5;  // inverse multiplier for phase offset
 		var car = Saw.ar(hz);
 		var inv = Saw.ar(hz * hzMul);
-		car - (mod * DelayC.ar(inv, 0.1, delRatio/hz))
+		car - (mod * AllpassL.ar(inv, 0.1, delRatio/hz))
 	};
 
 	blips = Mix.new(
@@ -49,7 +50,7 @@
 		pair.value(
 			hz: stack.value(hz, 8, 3),
 			mod: Array.fill(n, { sloth.value(dt, dt*10, 0.51, 0.99)}),
-			delRatio: Array.fill(n, {sloth.value(dt, dt*10, 055, 0.7)})
+			delRatio: Array.fill(n, {sloth.value(dt, dt*10, 0.55, 0.7)})
 		).clump(2)
 	);
 
@@ -57,10 +58,12 @@
 		blips[i].ring2(saws.wrapAt(i+1));
 	});
 
-	snd = (blips + saws/2 + (ring * 0.3 * LFNoise2.kr(1/dt)))/2;
+	snd = (blips + saws/2 + (ring * 0.3 * LFNoise2.kr(1/(dt*7))))/2;
 	snd = Mix.new((snd + RLPF.ar(snd, hz * [0.25, 0.5] + LFNoise2.ar(1/dt, 0.5), 0.2 + LFNoise2.ar(1/dt, 0.1))).clump(2));
 
-	gnar = Normalizer.ar(RLPF.ar(Pulse.ar(hz * 0.25).distort, hz, 0.7));
-
-	(snd*0.9 + gnar*0.8) * amp
+	gar = Normalizer.ar(RLPF.ar(Pulse.ar(hz * 0.25 + LFSaw.kr([1/17, 1/13], [0, 1], 0.2)).distort, hz, 0.7));
+	snd = snd*0.36 + gar*0.29 * amp * Linen.kr(attackTime:7.79);
+	// Peak.kr(Amplitude.kr(snd)).ampdb.poll;
+	snd
 }
+//.play(s);
