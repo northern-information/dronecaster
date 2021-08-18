@@ -18,6 +18,7 @@ Dronecaster {
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
+			postln('loading source: '++e.fullPath);
 			drones[name] = e.fullPath.load
 		});
 		drones.postln;

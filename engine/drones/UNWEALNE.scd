@@ -7,17 +7,17 @@
 	var amps = [0, 0, 2, -9, -4, -9, -12].dbamp;
 	
 	var please = r2.collect({arg r,i;
-		var pulse_hz = (hz * r);// + LFNoise1.kr(0.0625 * r, 0.05); //
-		var width = EnvGen.ar(Env.perc, Impulse.kr(r1[i] * 0.25));//, timeScale:LFTri.kr(1/(16*r2[i]), 0, 4.0, 3.0)).abs.max(0.99);
-		//var width = 0.5;
+		var pulse_hz = (hz * r) + LFNoise1.kr(0.0625 * r, 0.12);
+		var width = EnvGen.ar(Env.perc, Impulse.kr(r * 0.25), timeScale:LFTri.kr(1/(16*r2[i]), 0, 4.0, 3.0));
 		var fc = hz * 2 * r2.wrapAt(i+[2, 4, 6]);
-		//var fc = hz * r * 2;
-		var rq = LFTri.kr(1/(16*r).linlin(-1,1, 0.12, 0.34));
-		Pan2.ar(RLPF.ar(Pulse.ar(pulse_hz, width, mul:amps[i]), fc, rq), i.linlin(0,r1.size-1, -0.8, 0.8))
-		
+		var rq = LFTri.ar(1/(16*r), r1.wrapAt(i+3).wrap(0, 2)).linlin(-1,1, 0.13, 0.34);
+		var pulse;
+		width = width.linlin(0, 1, 0.25, 0.8);
+		pulse = Pulse.ar(pulse_hz, width, mul:amps[i]);
+		Pan2.ar(RLPF.ar(pulse, fc, rq), i.linlin(0,r1.size-1, -0.8, 0.8))		
 	});
 	
-	var snd = Mix.new(please.flatten.clump(2)) / please.size;
+	var snd = Mix.new(please) / please.size;
 	var shiftu = PitchShift.ar(snd, 2, windowSize:0.23, timeDispersion:0.11);
 	
 	var shifted = Mix.new(
@@ -36,12 +36,7 @@
 	lout = Mix.new( (snd + (del*0.27)).flatten.clump(2) );
 	lout = LPF.ar(HPF.ar(lout, 10), 10101).reverse;
 	LocalOut.ar(lout);
+	
 	snd = Mix.new( (snd+ (del*0.33)).flatten.clump(2) ) * amp * 0.23;
-	snd * Linen.kr(attackTime:7.77)
-		
-		//	snd = Mix.new((amp * 0.23 * (snd + shifted)).flatten.clump(2));
-		//snd = Mix.new(snd.flatten.clump(2)) * amp;
-		//Peak.kr(Amplitude.kr(snd)).ampdb.poll;
-		//Mix.new(snd) * amp
+	snd * Linen.kr(attackTime:7.77)		
 }
-	//.play(s);
