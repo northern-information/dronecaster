@@ -15,4 +15,5 @@
 	}!16)];
 	snd=snd*100;
 	snd=snd.tanh;
+	snd=snd*amp/8;
 }

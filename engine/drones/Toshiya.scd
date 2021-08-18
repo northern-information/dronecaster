@@ -30,5 +30,5 @@
 	snd=snd+(Amplitude.kr(snd)*VarLag.kr(LFNoise0.kr(1/1),1,warp:\sine).range(0,0.5)*Klank.ar(`[[hz, hz*2+23, hz*4+53], nil, [1, 1, 1]], PinkNoise.ar([0.007, 0.007])));
 
 	snd=LPF.ar(snd,15000);
-	snd=HPF.ar(snd.tanh,20);
+	snd=HPF.ar(snd.tanh/2,20);
 }
