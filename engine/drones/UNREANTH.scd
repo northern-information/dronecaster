@@ -64,7 +64,7 @@
 	});
 	dst = Mix.new(dst) * 0.125;
 
-	del = del + PitchShift.ar(Mix.new(del), 0.57, [2, 4], 0.001, 0.23, 0.07);
+	del = del + PitchShift.ar(Mix.new(del), 0.17, [2, 4], 0.001, 0.09, 0.07);
 	del = LeakDC.ar(del * 0.5).softclip;
 
 	saws = (Mix.new(Saw.ar([hz + (1/77),hz/2-(1/66),hz-(1/51), hz/2+(1/86)]).flatten.clump(2)) * 0.124);
@@ -73,7 +73,7 @@
 	ring = DiodeRingMod.ar(sinemix, saws) * -14.dbamp;
 	ring = HPF.ar(ring, hz);
 
-	saws = saws + PitchShift.ar(saws, 0.77, 0.5, 0.002, 0.1);
+	saws = saws + PitchShift.ar(saws, 0.2, 0.5, 0.002, 0.06);
 
 	snd = (sinemix + del + saws + ring) * 0.5 * amp;
 	snd = Mix.new(snd.flatten.clump(2));
