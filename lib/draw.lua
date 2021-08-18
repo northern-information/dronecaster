@@ -58,25 +58,20 @@ end
 -- ui
 --------------------------------------------------------------------------------
 
-function draw.top_menu(d, h, a)
-  screen.level(screen_levels["l"])
-  draw.mlrs(0, 12, 40, 0)
-  draw.mlrs(44, 12, 40, 0)
-  draw.mlrs(88, 12, 40, 0)
-  screen.level(screen_levels["h"])
-  screen.move(2, 8)
-  screen.text(d or "")
-  if alt then
-    screen.level(screen_levels["l"])    
-    screen.rect(44, 2, 40, 7)
-    screen.rect(88, 2, 40, 7)
+function draw.top_menu(hud)
+
+  if not alt then
+    screen.level(screen_levels["h"])
+    screen.move(2, 8)
+    screen.text(hud)
+  else
+    screen.level(screen_levels["h"])    
+    screen.rect(0, 0, 128, 11)
     screen.fill()
     screen.level(screen_levels["o"])
+    screen.move(2, 8)
+    screen.text(hud)
   end
-  screen.move(45, 8)
-  screen.text(h or "")
-  screen.move(89, 8)
-  screen.text(a or "")
 end
 
 

@@ -109,13 +109,14 @@ function redraw()
   d = drones[round(params:get("drone"))]
   h = round(params:get("hz")) .. " hz"
   a = round(params:get("amp"), 2) .. " amp"
+  hud = d .. " " .. h .. " " .. a
   p = playing
   draw.birds(pf)
   draw.wind(pf)
   draw.lights(pf)
   draw.uap(pf)
   draw.landscape()
-  draw.top_menu(d, h, a)
+  draw.top_menu(hud)
   draw.clock(rf)
   draw.play_stop(p)
   if (alert["recording"]) then
@@ -230,5 +231,10 @@ function process_crow_cv_a(v)
   engine.hz(hz_base * crow_cv)
 end
 
+function rerun()
+  norns.script.load(norns.state.script)
+end
+
+function r() rerun() end
 
 osc.event = osc_in -- should probably go in init? race conditions tho?
