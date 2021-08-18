@@ -31,6 +31,7 @@ Dronecaster {
 
 	start { arg name;
 		if (drones.keys.includes(name), {
+			postln('setting drone: '++name);
 			socket.setSource({
 			    arg hz=this.hz, amp=this.amp, amplag=0.02, hzlag=0.01;
 			    var amp_, hz_;
