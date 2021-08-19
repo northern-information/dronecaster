@@ -19,5 +19,5 @@
             ((1 - (1/(numTone + 1)))**4) +0.4
         ) / numVoices
     });
-    Mix.ar(voices);
+    Mix.ar(voices)/10;
 }

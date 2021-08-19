@@ -58,4 +58,5 @@
 	4.do({ y = AllpassN.ar(y, 0.050, [0.050.rand, 0.050.rand], 1) });
 	// add original sound to reverb and play it :
 	snd=snd+(0.01*y);
+   	snd=snd*amp/2;
 }
