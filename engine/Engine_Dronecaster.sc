@@ -13,12 +13,12 @@ Dronecaster {
 		if (baseDronePath == nil, {
 			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
 		});
-		postln("searching for drones at: " ++ baseDronePath);
+		postln("compiling drones in " ++ baseDronePath ++ "...");
 
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
-			drones[name] = e.fullPath.load
+			drones[name] = DroneCaster_SynthSocket.wrapDef(e.fullPath.load, name);
 		});
 		drones.postln;
 
@@ -31,13 +31,7 @@ Dronecaster {
 
 	start { arg name;
 		if (drones.keys.includes(name), {
-			socket.setSource({
-			    arg hz=440, amp=0.02, amplag=0.02, hzlag=0.01;
-			    var amp_, hz_;
-			    amp_ = Lag.ar(K2A.ar(amp), amplag);
-			    hz_ = Lag.ar(K2A.ar(hz), hzlag);
-			    drones[name].value(hz:hz_,amp:amp_);
-			});
+			socket.setSource(drones[name]);
 		}, {
 			postln("dronecaster does not know this drone: " ++ name);
 		});
