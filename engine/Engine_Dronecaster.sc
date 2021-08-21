@@ -10,6 +10,8 @@ Dronecaster {
 	}
 
 	init { arg server, baseDronePath;
+		socket = DroneCaster_SynthSocket.new(server, 0, [\hz, \amp]);
+		
 		if (baseDronePath == nil, {
 			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
 		});
@@ -18,11 +20,11 @@ Dronecaster {
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
-			drones[name] = DroneCaster_SynthSocket.wrapDef(e.fullPath.load, name);
+			var def = socket.wrapDef(e.fullPath.load, name, server);
+			if (def.notNil, { drones[name] = def; });
 		});
 		drones.postln;
 
-		socket = Dronecaster_SynthSocket.new(server, 0, [\amp, \hz]);
 
 		recordBus = Bus.audio(server, 2);
 		inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;

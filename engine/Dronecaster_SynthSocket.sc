@@ -3,25 +3,42 @@
 DroneCaster_SynthSocket {
 	var server, group, synth, controls, out;
 	var cuedSource, doneResponder;
+	var fadeTime = 1.0;
 
 	*new {
 		arg server, out, controls;
 		^super.new.init(server, out, controls);
 	}
 
-	*wrapDef {
+	wrapDef {
 		arg fn, name;
-		SynthDef.new(name, {
+		var def, nope = false;
+		postln("building synthdef: "++name);
+		//		postln("fn = " ++ fn);
+		//		postln("class(fn) = " ++ fn.class);
+		def = SynthDef.new(name, {
 			arg hz, amp=1, out=0, gate=1, attack=1, release=1;
 
 			var aenv, snd;
-			snd = fn.value;
+			snd = { fn.value(K2A.ar(hz), K2A.ar(amp)) }.try { 
+				arg err;				
+				postln("failed to wrap ugen graph! error:");
+				err.postln;
+				nope = true;
+				[Silent.ar]
+			};
 			aenv = EnvGen.kr(Env.asr(gate), attack, 1, release);
 			// force mix down to stereo (interleaved)
-			snd = Mix.new(fn.value.flatten.clump(2), mul:aenv);
-
+			snd = Mix.new(snd.flatten.clump(2)) * aenv;
+			
 			Out.ar(out, snd);
-		})
+		});
+		if (nope, {
+			^nil
+		}, {
+			def.load(server);
+			^def;
+		});
 	}
 
 
@@ -60,8 +77,10 @@ DroneCaster_SynthSocket {
 		doneResponder =  OSCFunc({ arg msg;
 			var nodeId, id;
 			nodeId = msg[1];
-			if (synth.notNil && nodeId = synth.nodeID, {
-				this.performSource;
+			if (synth.notNil, {
+				if (nodeId == synth.nodeID, {
+					this.performSource;
+				});
 			});
 		}, '/n_end', server.addr);
 	}
@@ -79,7 +98,7 @@ DroneCaster_SynthSocket {
 			// all this faff is just to initialize the synthdef with the values from the ctl busses.
 			// there is probably a cleaner way.
 			var controlVals = Dictionary.new;
-			var cond= Condition.new(false);
+			var condition = Condition.new(false);
 			controls.do({ arg k, bus;
 				bus.get({ arg val;
 					controlVals[k] = val;
@@ -92,7 +111,7 @@ DroneCaster_SynthSocket {
 			synth = Synth.new(cuedSource, [\out, out] ++ controlVals.getPairs, target:group);
 			controls.do({ arg k, bus; synth.map(k, bus); });
 			cuedSource = nil;
-		}. {
+		}, {
 			// no cued source
 			synth = nil;
 		});
