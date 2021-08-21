@@ -48,7 +48,7 @@
 	snd=Splay.ar(snd);
 
 	// global moog filter
-	snd=MoogFF.ar(snd.tanh,LinExp.kr(VarLag.kr(LFNoise0.kr(1/4),4,warp:\sine),-1,1,hz*10,18000).poll);
+	snd=MoogFF.ar(snd.tanh,LinExp.kr(VarLag.kr(LFNoise0.kr(1/4),4,warp:\sine),-1,1,hz*10,18000));
 
 	// reverb predelay time :
 	z = DelayN.ar(snd, 0.048);
