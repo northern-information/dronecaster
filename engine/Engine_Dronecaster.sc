@@ -10,20 +10,21 @@ Dronecaster {
 	}
 
 	init { arg server, baseDronePath;
+		socket = DroneCaster_SynthSocket.new(server, 0, [\hz, \amp]);
+		
 		if (baseDronePath == nil, {
 			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
 		});
-		postln("searching for drones at: " ++ baseDronePath);
+		postln("compiling drones in " ++ baseDronePath ++ "...");
 
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
 			var name = e.fileNameWithoutExtension;
-			postln('loading source: '++e.fullPath);
-			drones[name] = e.fullPath.load
+			var def = socket.wrapDef(e.fullPath.load, name, server);
+			if (def.notNil, { drones[name] = def; });
 		});
 		drones.postln;
 
-		socket = Dronecaster_SynthSocket.new(server, 0, [\amp, \hz]);
 
 		recordBus = Bus.audio(server, 2);
 		inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
@@ -31,15 +32,9 @@ Dronecaster {
 	}
 
 	start { arg name;
+		postln("start requested for name: " ++ name);
 		if (drones.keys.includes(name), {
-			postln('setting drone: '++name);
-			socket.setSource({
-			    arg hz=this.hz, amp=this.amp, amplag=0.02, hzlag=0.01;
-			    var amp_, hz_;
-			    amp_ = Lag.ar(K2A.ar(amp), amplag);
-			    hz_ = Lag.ar(K2A.ar(hz), hzlag);
-			    drones[name].value(hz:hz_,amp:amp_);
-			});
+			socket.setSource(drones[name]);
 		}, {
 			postln("dronecaster does not know this drone: " ++ name);
 		});

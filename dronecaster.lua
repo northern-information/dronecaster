@@ -11,6 +11,7 @@
 --------------------------------------------------------------------------------
 engine.name = "Dronecaster"
 draw = include "lib/draw"
+
 local MusicUtil=require "musicutil"
 
 -- variables
@@ -50,191 +51,220 @@ alert["recording_message"] = messages["empty"]
 alert["recording"] = false
 alert["recording_frame"] = 0
 
+done_init = false
+
 -- init & core
 --------------------------------------------------------------------------------
 function init()
-  audio:pitch_off()
 
-  initital_monitor_level = params:get('monitor_level')
-  params:set('monitor_level', -math.huge)
-  initital_reverb_onoff = params:get('reverb')
-  params:set('reverb', 1) -- 1 is OFF
+   list_drone_names(
+      function(names)
+	 drones = names
+	 tab.print(drones)
+	 
+	 audio:pitch_off()
 
-  draw.init()
-  if util.file_exists(save_path) == false then
-    util.make_dir(save_path)
-  end
-  
-  crow.input[1].mode("stream", .01)
-  crow.input[1].stream = process_crow_cv_a
-  
-  counter.time = 1
-  counter.count = -1
-  counter.play = 1
-  counter.event = the_sands_of_time
-  counter:start()
-  params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
-  params:set_action("amp", engine.amp)
-  params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
-  -- params:set_action("hz", engine.hz)
-  params:set_action("hz", hz_base_update)
-  params:add{type="number",id="note",name="note",min=0,max=127,default=24,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
-  params:set_action("note",function(v)
-    params:set("hz",math.pow(2,(v-69)/12)*440)
-  end)
-  params:add_control("drone","drone",controlspec.new(1, #drones, "lin", 0, drone_default, "drone",1/(#drones-1)))
-  params:set_action("drone", play_drone)
-  engine.amp(amp_default)
-  engine.hz(hz_default)
+	 initital_monitor_level = params:get('monitor_level')
+	 params:set('monitor_level', -math.huge)
+	 initital_reverb_onoff = params:get('reverb')
+	 params:set('reverb', 1) -- 1 is OFF
+
+	 draw.init()
+	 if util.file_exists(save_path) == false then
+	    util.make_dir(save_path)
+	 end
+	 
+	 crow.input[1].mode("stream", .01)
+	 crow.input[1].stream = process_crow_cv_a
+	 
+	 counter.time = 1
+	 counter.count = -1
+	 counter.play = 1
+	 counter.event = the_sands_of_time
+	 counter:start()
+	 params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
+	 params:set_action("amp", engine.amp)
+	 params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
+	 params:set_action("hz", hz_base_update)
+	 params:add{type="number",id="note",name="note",min=0,max=127,default=24,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
+	 params:set_action("note",function(v)
+			      params:set("hz",math.pow(2,(v-69)/12)*440)
+	 end)
+
+	 --params:add_control("drone","drone", controlspec.new(1, #drones, "lin", 0, drone_default, "drone", 1/(#drones-1)))
+	 params:add_option("drone", "drone", drones)
+	 params:set_action("drone", play_drone)
+	 engine.amp(amp_default)
+	 engine.hz(hz_default)
+	 
+	 done_init = true
+      end
+   )
 end
 
 function the_sands_of_time()
-  if playing then
-    playing_frame = playing_frame + 1  
-  end
-  if recording then
-    recording_frame = recording_frame + 1
-    recording_time = recording_time + 1
-  end
-  redraw()
+   if playing then
+      playing_frame = playing_frame + 1  
+   end
+   if recording then
+      recording_frame = recording_frame + 1
+      recording_time = recording_time + 1
+   end
+   redraw()
 end
 
 function redraw()
-  screen.clear()
-  screen.aa(0)
-  screen.font_face(0)
-  screen.font_size(8)
-  pf = playing_frame
-  rf = recording_time
-  d = drones[round(params:get("drone"))]
-  h = round(params:get("hz")) .. " hz"
-  a = round(params:get("amp"), 2) .. " amp"
-  hud = d .. " " .. h .. " " .. a
-  p = playing
-  draw.birds(pf)
-  draw.wind(pf)
-  draw.lights(pf)
-  draw.uap(pf)
-  draw.landscape()
-  draw.top_menu(hud)
-  draw.clock(rf)
-  draw.play_stop(p)
-  if (alert["recording"]) then
-    alert = draw.alert_recording(alert, messages)
-  end
-  if (alert["casting"]) then
-    alert = draw.alert_casting(alert, messages)
-  end
-  screen.update()
+   if (not done_init) then return end
+   screen.clear()
+   screen.aa(0)
+   screen.font_face(0)
+   screen.font_size(8)
+   pf = playing_frame
+   rf = recording_time
+   d = drones[round(params:get("drone"))]
+   h = round(params:get("hz")) .. " hz"
+   a = round(params:get("amp"), 2) .. " amp"
+   hud = d .. " " .. h .. " " .. a
+   p = playing
+   draw.birds(pf)
+   draw.wind(pf)
+   draw.lights(pf)
+   draw.uap(pf)
+   draw.landscape()
+   draw.top_menu(hud)
+   draw.clock(rf)
+   draw.play_stop(p)
+   if (alert["recording"]) then
+      alert = draw.alert_recording(alert, messages)
+   end
+   if (alert["casting"]) then
+      alert = draw.alert_casting(alert, messages)
+   end
+   screen.update()
 end
 
 -- encs & keys
 --------------------------------------------------------------------------------
 function enc(n,d)
-  local mult
-  if n == 1 then
-    params:set("drone", util.clamp(params:get("drone") + d, 1, #drones))
-  elseif n == 2 then
-    mult = alt and .1 or .001
-    params:delta("hz", d * mult)
-  elseif n == 3 then
-    mult = alt and 10 or .1
-    params:delta("amp", d * mult)
-  end
-  redraw()
+   local mult
+   if n == 1 then
+      params:set("drone", util.clamp(params:get("drone") + d, 1, #drones))
+   elseif n == 2 then
+      mult = alt and .1 or .001
+      params:delta("hz", d * mult)
+   elseif n == 3 then
+      mult = alt and 10 or .1
+      params:delta("amp", d * mult)
+   end
+   redraw()
 end
 
 function key(n, z)
-  if n == 1 and z == 1 then
+   if n == 1 and z == 1 then
       alt = true
-  elseif z == 0 then
-    if n == 1 then
-      alt = false
-    end
-    if n == 2 then
-      recording = not recording
-      alert["recording"] = true
-      alert["recording_frame"] = 1
-      if recording == true then
-        local record_path = make_filename()
-        recording_time = 0
-        alert["recording_message"] = messages["start_recording"]
-        print("recording to file " .. record_path)
-        engine.record_start(record_path)
-      else
-        alert["recording_message"] = messages["stop_recording"]
-        engine.record_stop(1)
+   elseif z == 0 then
+      if n == 1 then
+	 alt = false
       end
-    elseif n == 3 then
-      playing = not playing
-      alert["casting"] = true
-      alert["casting_frame"] = 1
-      if playing == true then
-        play_drone()
-        alert["casting_message"] = messages["start_casting"]
-      else
-        engine.stop(1)
-        alert["casting_message"] = messages["stop_casting"]
+      if n == 2 then
+	 recording = not recording
+	 alert["recording"] = true
+	 alert["recording_frame"] = 1
+	 if recording == true then
+	    local record_path = make_filename()
+	    recording_time = 0
+	    alert["recording_message"] = messages["start_recording"]
+	    print("recording to file " .. record_path)
+	    engine.record_start(record_path)
+	 else
+	    alert["recording_message"] = messages["stop_recording"]
+	    engine.record_stop(1)
+	 end
+      elseif n == 3 then
+	 playing = not playing
+	 alert["casting"] = true
+	 alert["casting_frame"] = 1
+	 if playing == true then
+	    play_drone()
+	    alert["casting_message"] = messages["start_casting"]
+	 else
+	    engine.stop(1)
+	    alert["casting_message"] = messages["stop_casting"]
+	 end
       end
-    end
-  end
-  redraw()
+   end
+   redraw()
 end
 
 function play_drone()
-    local droneIndex = params:get("drone")
-    playing = true
-    if droneIndex > 0 and droneIndex <= #drones then
+   local droneIndex = params:get("drone")
+   playing = true
+   if droneIndex > 0 and droneIndex <= #drones then
       engine.start(drones[droneIndex])
-    end
+   end
 end
 
 -- utils
 --------------------------------------------------------------------------------
 function make_filename()
-  return save_path .. filename_prefix .. os.date("%Y_%m_%d_%H_%M_%S") .. ".aiff"
+   return save_path .. filename_prefix .. os.date("%Y_%m_%d_%H_%M_%S") .. ".aiff"
 end
 
 function round(num, places)
-  if places and places > 0 then
-    mult = 10 ^ places
-    return math.floor(num * mult + 0.5) / mult
-  end
-  return math.floor(num + 0.5)
+   if places and places > 0 then
+      mult = 10 ^ places
+      return math.floor(num * mult + 0.5) / mult
+   end
+   return math.floor(num + 0.5)
 end
 
-function osc_in(path, msg)
-  if path == "/add_drone" then
-    print("adding drone" .. msg[1])
-    table.insert(drones, msg[1])
-  end
-  table.sort(drones)
-end
+--[[
+   function osc_in(path, msg)
+   if path == "/add_drone" then
+   print("adding drone: " .. msg[1])
+   table.insert(drones, msg[1])
+   end
+   table.sort(drones)
+   end
+--]]
 
 function cleanup()
-  -- Put user's audio settings back where they were
-  params:set('monitor_level', initital_monitor_level)
-  params:set('reverb', initital_reverb_onoff)
-  engine.stop(1)
-  engine.record_stop(1)
+   -- Put user's audio settings back where they were
+   params:set('monitor_level', initital_monitor_level)
+   params:set('reverb', initital_reverb_onoff)
+   engine.stop(1)
+   engine.record_stop(1)
 end
 
 function hz_base_update(n)
-  hz_base = n
-  engine.hz(hz_base * crow_cv)
+   hz_base = n
+   engine.hz(hz_base * crow_cv)
 end
 
 function process_crow_cv_a(v)
-  -- print("input stream: "..v)
-  -- print(v)
-  crow_cv = 2 ^ ((v + 1) - 1)
-  engine.hz(hz_base * crow_cv)
+   -- print("input stream: "..v)
+   -- print(v)
+   crow_cv = 2 ^ ((v + 1) - 1)
+   engine.hz(hz_base * crow_cv)
 end
 
 function rerun()
-  norns.script.load(norns.state.script)
+   norns.script.load(norns.state.script)
 end
 
 function r() rerun() end
 
-osc.event = osc_in -- should probably go in init? race conditions tho?
+function list_drone_names(callback)
+   local cb = function(text)
+      local names = {}
+      for line in string.gmatch(text, "/[%a%d%.%s]-%.scd") do
+	 name = string.sub(line, 2, -5)
+	 table.insert(names, name)
+      end
+      table.sort(names)
+      callback(names)
+   end
+   norns.system_cmd('find '.. _path.code .. 'dronecaster/engine/drones -name *.scd', cb)
+end
+
+--osc.event = osc_in -- should probably go in init? race conditions tho?

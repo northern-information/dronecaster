@@ -1,161 +1,133 @@
-// a primitive and limited analog to `NodeProxy`,
-// which just crossfades between two stereo synth functions.
-// motivation is to limit the number of active synths during crossfades,
-// by specifying a shallow queuing behavior.
-// @zebra
-
-Dronecaster_SynthSocket {
-	var server;          // a Server!
-	var controls;        // Set of control names
-	var <inBus;          // Array of 2 stereo Busses
-
-	var group;           // a Group
-	var <fadeSynth;      // synth to perform the xfade
-
-	var <controlBus;     // Dictionary of control busses
-	var <controlLag;     // Dictionary of control-rate lag synths
-
-	var <source;         // synth-defining Function which is currently fading in or active
-	var <sourceLast;     // the previously active source synth Function
-	var <sourceQ;        // queued synth Function
-
-	var <sourceIndex;    // current index of active source bus
-	var <isFading;       // flag indicating xfade in progress
-
-	var controlLagTime = 1.0;
-	var fadeTime = 4.0;
+// old version way too complicated
+// we don't want xfades, we want down+up
+DroneCaster_SynthSocket {
+	var server, group, synth, controls, out;
+	var cuedSource, doneResponder;
+	var fadeTime = 1.0;
 
 	*new {
-		arg server,      // instance of Server
-		out,             // output bus index
-		controls;        // array of control names; source synth functions should accept these args
+		arg server, out, controls;
 		^super.new.init(server, out, controls);
 	}
 
-	init {
-		arg s, out, ctl;
+	wrapDef {
+		arg fn, name;
+		var def, nope = false;
+		postln("building synthdef: "++name);
+		def = SynthDef.new(name, {
+			arg hz, amp=1, out=0, gate=1, attack=1.0, release=1.0;
 
-		server = s;
-		controls = ctl.asSet;
-
-		source = nil;
-		sourceLast = nil;
-		sourceQ = nil;
-
-		sourceIndex = 0;
-		isFading = false;
-
-		group = Group.new(server);
-		inBus = Array.fill(2, { Bus.audio(s, 2) });
-
-		controlBus = Dictionary.new;
-		controlLag = Dictionary.new;
-		controls.do({ arg name;
-			controlBus[name] = Bus.control(s);
-			controlLag[name] = {
-				arg bus, value, time = 1.0;
-				ReplaceOut.kr(bus, Lag.kr(value, time));
-			}.play(target:group, args:[\bus, controlBus[name].index]);
+			var aenv, snd;
+			snd = { fn.value(K2A.ar(hz), K2A.ar(amp)) }.try { 
+				arg err;				
+				postln("failed to wrap ugen graph! error:");
+				err.postln;
+				nope = true;
+				[Silent.ar]
+			};
+			aenv = EnvGen.kr(Env.asr(attack, 1, release), gate, doneAction:2);
+			// force mix down to stereo (interleaved)
+			snd = Mix.new(snd.flatten.clump(2)) * aenv;
+			
+			Out.ar(out, snd);
 		});
-
-		fadeSynth = Array.fill(2, { arg i;
-			{
-				arg out=0, in, gate, time=4;
-				var fade, snd;
-				fade = EnvGen.ar(Env.asr(time, 1, time), gate);
-				snd = fade * In.ar(in, 2);
-				Out.ar(out, snd)
-			}.play(target:group, args: [
-				\out, out,
-				\in, inBus[i].index,
-				\time, fadeTime
-			]);
-		});
-	}
-
-	setSource { arg newFunction;
-		if (isFading, {
-			sourceQ = newFunction;
+		if (nope, {
+			^nil
 		}, {
-			this.performFade(newFunction);
+			def.load(server);
+			^def;
 		});
 	}
 
-	setFadeTime { arg time;
-		fadeTime = time;
-		fadeSynth.do({ arg synth; synth.set(\time, fadeTime); });
-	}
-
-	setControl { arg key, value;
-		controlLag[key].set(\value, value);
-	}
-
-	setControlLagTime { arg time;
-		controlLag.do({ arg synth; synth.set(\time, time); });
-	}
 
 	stop {
-		fadeSynth.do({ arg synth; synth.set(\gate, 0); });
+		if (synth.notNil, {
+			synth.set(\gate, 0);
+		});
+	}
+
+	setSource { arg def;
+		postf("socket requested new source: %; current synth = %\n", def.name, synth);
+		cuedSource = def;
+		if (synth.isNil, {
+			postln("no current synth; playing now");
+			this.performSource;
+		}, {
+			postln("stopping current synth...");
+			synth.set(\gate, 0);
+		});
+	}
+
+
+	setControl { arg k, v;
+		//postf("setting control % = %\n", k, v);
+		controls[k].set(v);
+	}
+
+	setFadeTime { arg t;
+		fadeTime = t;
+		if (synth.notNil, {
+			synth.set(\atteck, fadeTime);
+			synth.set(\release, fadeTime);
+		});
+	}
+
+	init { arg aServer, aOut, aControls;
+		server = aServer;
+		out = aOut;
+		controls = Dictionary.new;
+		aControls.do({ arg k;
+			postln("creating control bus: " ++ k);
+			controls[k] = Bus.control(server, 1);
+		});
+
+		group = Group.new(server);
+		synth = nil;
+		cuedSource = nil;
+
+		doneResponder =  OSCFunc({ arg msg;
+			var nodeId, id;
+			nodeId = msg[1];
+			postln("handling node end for ID: " ++ nodeId);
+			if (synth.notNil, {
+				postln("(our synth ID: " ++ synth.nodeID ++ ")");
+				if (nodeId == synth.nodeID, {
+					this.performSource;
+				});
+			});
+		}, '/n_end', server.addr);
 	}
 
 	free {
+		controls.do({ arg bus; bus.free; });
+		if (synth.notNil, { synth.free; });
 		group.free;
-		inBus.do({ arg bus; bus.free; });
-		controlBus.do({ arg bus; bus.free; });
 	}
 
-	//////////////////////////////////////////
-	/// private
+	///// private
 
-	performFade { arg newFunction, args;
-		sourceIndex = if (sourceIndex > 0, {0}, {1});
-		// postln("performing fade; new source index = " ++ sourceIndex);
+	performSource {
+		if (cuedSource.notNil, {
+			var controlVals = Dictionary.new;
+			var condition = Condition.new;
+			var synthArgs = Dictionary.new;
 
-		isFading = true;
-
-		// this Routine creates a new thread
-		// not the most robust solution if fade times are extremely short,
-		// but much simpler than synchronizing with events from the server.
-		Routine {
-			sourceLast = source;
-			source = newFunction.play(
-				outbus:inBus[sourceIndex].index,
-				target:group,
-				addAction:\addToHead // <- important
-			);
-
-			server.sync;
-
-			controls.do({ arg key;
-				source.map(key, controlBus[key]);
+			postf("performing cued source: % (%)\n", cuedSource, cuedSource.name);
+			controls.keys.do({ arg k;
+				controlVals[k] = controls[k].getSynchronous;
 			});
-
-			if ((args == nil).not, {
-				controls.do({ arg key;
-					if (args.includes(key), {
-						controlBus[key].set(args[key]);
-					})
-				})
-			});
-
-			fadeSynth[sourceIndex].set(\gate, 1);
-			fadeSynth[1-sourceIndex].set(\gate, 0);
-
-			(fadeTime + 0.001).wait;
-			this.finishFade;
-		}.play;
-	}
-
-	finishFade {
-		if ((sourceLast== nil).not, {
-			sourceLast.free;
-		});
-
-		isFading = false;
-
-		if ((sourceQ == nil).not, {
-			this.performFade(sourceQ);
-			sourceQ = nil;
+			
+			synthArgs = [\out, out, \attack, fadeTime, \release, fadeTime] ++ controlVals.getPairs;
+			postln("synthArgs = " ++ synthArgs);
+			postf("cuedSource = % (%)\n", cuedSource, cuedSource.name);
+			
+			synth = Synth.new(cuedSource.name, synthArgs, target:group);
+			postf("new synth = %\n; mapping...\n", synth);
+			controls.keys.do({ arg k; synth.map(k, controls[k]); });
+			postln("...done; clearing cued source.");
+			cuedSource = nil;
+		}, {
+			synth = nil;
 		});
 	}
 }
