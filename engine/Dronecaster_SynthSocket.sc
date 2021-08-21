@@ -15,7 +15,7 @@ DroneCaster_SynthSocket {
 		var def, nope = false;
 		postln("building synthdef: "++name);
 		def = SynthDef.new(name, {
-			arg hz, amp=1, out=0, gate=1, attack=4.0, release=4.0;
+			arg hz, amp=1, out=0, gate=1, attack=1.0, release=1.0;
 
 			var aenv, snd;
 			snd = { fn.value(K2A.ar(hz), K2A.ar(amp)) }.try { 
@@ -64,6 +64,14 @@ DroneCaster_SynthSocket {
 		controls[k].set(v);
 	}
 
+	setFadeTime { arg t;
+		fadeTime = t;
+		if (synth.notNil, {
+			synth.set(\atteck, fadeTime);
+			synth.set(\release, fadeTime);
+		});
+	}
+
 	init { arg aServer, aOut, aControls;
 		server = aServer;
 		out = aOut;
@@ -110,7 +118,7 @@ DroneCaster_SynthSocket {
 				controlVals[k] = controls[k].getSynchronous;
 			});
 			
-			synthArgs = [\out, out] ++ controlVals.getPairs;
+			synthArgs = [\out, out, \attack, fadeTime, \release, fadeTime] ++ controlVals.getPairs;
 			postln("synthArgs = " ++ synthArgs);
 			postln("cuedSource = " ++ cuedSource);
 			
