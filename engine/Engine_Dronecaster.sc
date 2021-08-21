@@ -3,7 +3,7 @@ Dronecaster {
 	var <drones;
 	var <socket; // a Dronecaster_SynthSocket
 	var inJacks, recordBus, <recorder;
-	var amp, hz;
+	var amp=0.4, hz=55;
 
 	*new { arg server, baseDronePath;
 		^super.new.init(server, baseDronePath)

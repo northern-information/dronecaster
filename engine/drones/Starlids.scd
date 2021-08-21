@@ -29,5 +29,6 @@
 	snd=MoogLadder.ar(snd.tanh,LinExp.kr(VarLag.kr(LFNoise0.kr(1/6),6,warp:\sine),-1,1,hz*8,hz*60));
 	// cut out low frequencies
 	snd=HPF.ar(snd,20);
+
 }
 
