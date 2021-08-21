@@ -11,7 +11,6 @@
 --------------------------------------------------------------------------------
 engine.name = "Dronecaster"
 draw = include "lib/draw"
-include "lib/util"
 
 local MusicUtil=require "musicutil"
 
