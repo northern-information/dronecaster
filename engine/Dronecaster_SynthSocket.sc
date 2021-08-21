@@ -107,7 +107,6 @@ DroneCaster_SynthSocket {
 	///// private
 
 	performSource {
-		postln(controls);		
 		if (cuedSource.notNil, {
 			var controlVals = Dictionary.new;
 			var condition = Condition.new;
@@ -120,11 +119,12 @@ DroneCaster_SynthSocket {
 			
 			synthArgs = [\out, out, \attack, fadeTime, \release, fadeTime] ++ controlVals.getPairs;
 			postln("synthArgs = " ++ synthArgs);
-			postln("cuedSource = " ++ cuedSource);
+			postf("cuedSource = % (%)\n", cuedSource, cuedSource.name);
 			
 			synth = Synth.new(cuedSource.name, synthArgs, target:group);
-			postf("new synth = %\n", synth);
+			postf("new synth = %\n; mapping...\n", synth);
 			controls.keys.do({ arg k; synth.map(k, controls[k]); });
+			postln("...done; clearing cued source.");
 			cuedSource = nil;
 		}, {
 			synth = nil;
