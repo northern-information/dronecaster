@@ -23,7 +23,7 @@ Dronecaster {
 			var def = socket.wrapDef(e.fullPath.load, name, server);
 			if (def.notNil, { drones[name] = def; });
 		});
-		drones.postln;
+		//drones.postln;
 
 
 		recordBus = Bus.audio(server, 2);
@@ -32,6 +32,7 @@ Dronecaster {
 	}
 
 	start { arg name;
+		postln("start requested for name: " ++ name);
 		if (drones.keys.includes(name), {
 			socket.setSource(drones[name]);
 		}, {
@@ -79,10 +80,12 @@ Engine_Dronecaster : CroneEngine {
 		//  :/
 		caster = Dronecaster.new(context.server, "/home/we/dust/code/dronecaster/engine/drones" );
 
+		/*
 		caster.drones.keys.do({ arg name;
 			("sending name: " ++ name).postln;
 			luaOscAddr.sendMsg("/add_drone", name);
 		});
+		*/
 
 		this.addCommand("hz", "f", { arg msg;
 			caster.setHz(msg[1].asFloat);
