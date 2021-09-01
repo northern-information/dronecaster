@@ -7,8 +7,6 @@
 	var snd,env,z,y,sndgate,chord,chordchange;
 	var detuning=0.04;
 
-	sndgate=1-EnvGen.kr(Env.new([0,1,1,0],[0.1,LFNoise0.kr(0.5).range(0.01,0.05),0.05]),Impulse.kr(TExpRand.kr(0.01,1,Dust.kr(1))));
-
 	chordchange=Impulse.kr(0.06)+Impulse.kr(0)+Dust.kr(0.005);
 	chord=Demand.kr(chordchange,0,Dseq([
 		[0,12],
