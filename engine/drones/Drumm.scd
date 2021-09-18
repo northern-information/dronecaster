@@ -86,7 +86,7 @@
 	//stomp2=Lag.kr(intro*q.range(0,1)>0.9);
 	// snd=SelectX.ar(Clip.kr(stomp+SinOsc.kr(0.1).range(0,0.1)),[sndkind,snd*0.8+(stomp2*sndkind)]);
 	introp=q.range(0,1).poll*intro;
-	snd=SelectX.ar(Clip.kr(introp+(SinOsc.kr(mainrate/64).range(0,0.1)*intro)),[sndkind*1.1,snd]);
+	snd=SelectX.ar(Clip.kr(introp+(SinOsc.kr(mainrate/64).range(0,0.1)*intro)),[sndkind,snd]);
 	snd=FreeVerb.ar(snd,mix:SelectX.kr(Lag.kr(A2K.kr(stomp),1),[0.3,0.6]),room:drop,damp:drop);
 	snd*amp
 }
