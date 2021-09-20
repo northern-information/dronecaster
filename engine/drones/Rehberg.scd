@@ -31,6 +31,6 @@
 		room:SinOsc.kr(0.1).range(0.3,0.6),
 		mix:LFNoise0.kr(0.2).range(0.1,0.6),
 	);
-	snd=snd*amp*envinv;
+	snd=snd*amp*envinv*0.35;
 	//Out.ar(0,snd*amp*envinv);
 }
