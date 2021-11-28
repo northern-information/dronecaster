@@ -77,12 +77,19 @@ Engine_Dronecaster : CroneEngine {
 	alloc {
 		var luaOscAddr = NetAddr("localhost", luaOscPort);
 
-		//  :/
-		caster = Dronecaster.new(context.server, "/home/we/dust/code/dronecaster/engine/drones" );
 
-		caster.drones.keys.do({ arg name;
-			("sending name: " ++ name).postln;
-			luaOscAddr.sendMsg("/add_drone", name);
+		this.addCommand("initialize", "ff", { arg msg;
+			if (caster==nil,{
+				//  :/
+				caster = Dronecaster.new(context.server, "/home/we/dust/code/dronecaster/engine/drones" );
+				// caster.drones.keys.do({ arg name;
+				// 	("sending name: " ++ name).postln;
+				// 	luaOscAddr.sendMsg("/add_drone", name);
+				// });
+				caster.setHz(msg[1].asFloat);
+				caster.setAmp(msg[2].asFloat);
+				luaOscAddr.sendMsg("/drones_loaded",1);
+			});
 		});
 
 		this.addCommand("hz", "f", { arg msg;

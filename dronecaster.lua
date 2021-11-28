@@ -30,6 +30,7 @@ hz_base = 55
 crow_cv = 1
 drone_default = 1
 drones = {}
+drones_loaded=false
 recording = false
 playing = false
 counter = metro.init()
@@ -42,6 +43,7 @@ messages["empty"] = "..."
 messages["start_recording"] = "Recording..."
 messages["stop_recording"] = "...saved."
 messages["start_casting"] = "Casting drone..."
+messages["start_casting_after_load"] = "Wait 5 sec..."
 messages["stop_casting"] = "Cast halted."
 alert = {}
 alert["casting_message"] = messages["empty"]
@@ -93,13 +95,23 @@ function init()
 
 	 --params:add_control("drone","drone", controlspec.new(1, #drones, "lin", 0, drone_default, "drone", 1/(#drones-1)))
 	 params:add_option("drone", "drone", drones)
-	 params:set_action("drone", play_drone)
-	 engine.amp(amp_default)
-	 engine.hz(hz_default)
+	 params:set_action("drone", function()
+      if playing then 
+         play_drone()
+      end
+    end)
+    engine.initialize(hz_default,amp_default)
 	 
 	 done_init = true
       end
    )
+
+   clock.run(function()
+      while true do
+         clock.sleep(1/5)
+         redraw()
+      end
+   end)
 end
 
 function the_sands_of_time()
@@ -110,7 +122,6 @@ function the_sands_of_time()
       recording_frame = recording_frame + 1
       recording_time = recording_time + 1
    end
-   redraw()
 end
 
 function redraw()
@@ -156,7 +167,6 @@ function enc(n,d)
       mult = alt and 10 or .1
       params:delta("amp", d * mult)
    end
-   redraw()
 end
 
 function key(n, z)
@@ -182,18 +192,24 @@ function key(n, z)
 	 end
       elseif n == 3 then
 	 playing = not playing
+    if playing==nil then 
+      playing=false
+   end
 	 alert["casting"] = true
 	 alert["casting_frame"] = 1
 	 if playing == true then
 	    play_drone()
-	    alert["casting_message"] = messages["start_casting"]
+       if drones_loaded then 
+   	    alert["casting_message"] = messages["start_casting"]
+       else 
+          alert["casting_message"] = messages["start_casting_after_load"]
+       end
 	 else
 	    engine.stop(1)
 	    alert["casting_message"] = messages["stop_casting"]
 	 end
       end
    end
-   redraw()
 end
 
 function play_drone()
@@ -218,15 +234,15 @@ function round(num, places)
    return math.floor(num + 0.5)
 end
 
---[[
-   function osc_in(path, msg)
+
+function osc_in(path, msg)
    if path == "/add_drone" then
-   print("adding drone: " .. msg[1])
-   table.insert(drones, msg[1])
+      print("adding drone: " .. msg[1])
+   elseif path == "/drones_loaded" then 
+      drones_loaded=true
    end
-   table.sort(drones)
-   end
---]]
+end
+
 
 function cleanup()
    -- Put user's audio settings back where they were
@@ -267,4 +283,4 @@ function list_drone_names(callback)
    norns.system_cmd('find '.. _path.code .. 'dronecaster/engine/drones -name *.scd', cb)
 end
 
---osc.event = osc_in -- should probably go in init? race conditions tho?
+osc.event = osc_in -- should probably go in init? race conditions tho?
