@@ -105,7 +105,7 @@ function draw.alert_casting(alert, messages)
   alert_window()
   alert_message(alert["casting_message"])
   alert["casting_frame"] = alert["casting_frame"] + 1
-  if (alert["casting_frame"] == 5) then
+  if (alert["casting_frame"] == 15) then
     alert["casting"] = false
     alert["casting_frame"] = 0
     alert["casting_message"] = messages["empty"]
