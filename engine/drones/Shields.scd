@@ -55,5 +55,5 @@
 	snd=Limiter.ar(snd,0.95,0.1);
 
 	snd=snd*EnvGen.ar(Env.new([0,1,1],[10,100000]));
-	snd*amp;
+	snd*amp*0.5;
 }
