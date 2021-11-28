@@ -4,6 +4,7 @@ DroneCaster_SynthSocket {
 	var server, group, synth, controls, out;
 	var cuedSource, doneResponder;
 	var fadeTime = 1.0;
+	var buf;
 
 	*new {
 		arg server, out, controls;
@@ -18,7 +19,7 @@ DroneCaster_SynthSocket {
 			arg hz, amp=1, out=0, gate=1, attack=1.0, release=1.0;
 
 			var aenv, snd;
-			snd = { fn.value(K2A.ar(hz), K2A.ar(amp)) }.try { 
+			snd = { fn.value(K2A.ar(hz), K2A.ar(amp), K2A.ar(buf.bufnum)) }.try { 
 				arg err;				
 				postln("failed to wrap ugen graph! error:");
 				err.postln;
@@ -80,6 +81,10 @@ DroneCaster_SynthSocket {
 			postln("creating control bus: " ++ k);
 			controls[k] = Bus.control(server, 1);
 		});
+
+		// create a buffer for tape delays
+		buf=Buffer.alloc(server,server.sampleRate*10,2);
+		("allocated buffer"+buf.bufnum).postln;
 
 		group = Group.new(server);
 		synth = nil;
