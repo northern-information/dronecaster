@@ -9,7 +9,7 @@
 	var intervals = base.pow([0, 7, 14, 20, 27, 34, 41]);
 	var busses = LocalIn.ar(14).reshape(7, 2);
 	var nice = LFNoise2.kr(200.reciprocal);
-	var bigsound;
+	var bigsound, feedbacks;
 	var sines = 7.collect { |x|
 		var next = busses[(x+1)%7];
 		var nextayim = busses[(x+2)%7];
@@ -37,12 +37,19 @@
 			stereo = stereo/(x+1);
 		};
 		stereo = Rotate2.ar(stereo[0], stereo[1], LFNoise2.kr(25.reciprocal)/2);
+		stereo;
+	};
+	feedbacks = sines.collect { |stereo|
 		stereo = stereo * LFDNoise3.kr(
 			LFNoise2.kr(300.reciprocal).range(120.reciprocal, 30.reciprocal), add: 0.2,
 		).clip(0, 1).lag2(13);
-		stereo;
 	};
-	LocalOut.ar(sines.reshape(14));
+	sines = sines.collect { |stereo|
+		stereo = stereo * LFDNoise3.kr(
+			LFNoise2.kr(300.reciprocal).range(120.reciprocal, 30.reciprocal), add: 0.2,
+		).clip(0, 1).lag2(13);
+	};
+	LocalOut.ar(feedbacks.reshape(14));
 	bigsound = Mix.ar(0.5*sines*amp);
 	bigsound = CombN.ar(bigsound, 0.3, 0.3, LFNoise2.kr(0.02).exprange(0.3, 3.0));
 	bigsound.tanh;
