@@ -16,7 +16,7 @@
 		var mod = (((x+1)*next) + nextayim);
 		var stereo;
 		var pitch = hz*intervals[x];
-		mod = pi * LFNoise2.kr(66.reciprocal).unipolar().pow(nice.range(0.9, 2)) * mod;
+		mod = pi * LFNoise2.kr(66.reciprocal).unipolar().pow(nice.range(0.9, 1.7)) * mod;
 		stereo = SinOsc.ar(pitch + ((x/2)*LFNoise2.kr(15.reciprocal!2)), mod);
 		// At high pitch, introduce subharmonics instead of high intervals.
 		switch (x)
