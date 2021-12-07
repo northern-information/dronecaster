@@ -27,13 +27,13 @@
 		switch (x)
 		{6} {
 			stereo = SelectX.ar(hz/(150+hz), [
-				stereo/(x+1),
+				stereo/((1.5*x)+1),
 				SinOsc.ar(hz/2 + LFNoise2.kr(0.1!2), mod),
 			]);
 		}
 		{5} {
 			stereo = SelectX.ar(hz/(300+hz), [
-				stereo/(x+1),
+				stereo/((1.3*x)+1),
 				SinOsc.ar(hz/3 + LFNoise2.kr(0.1!2), mod)/2,
 			]);
 		}
