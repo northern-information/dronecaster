@@ -34,22 +34,21 @@
 	sig = ((sig + phased)/2);
 	delayIn = sig + noise;
 	delayed1 = SelectX.ar(delaySel1, [
-		DelayN.ar(delayIn, 2.9, beat),
-		DelayN.ar(delayIn, 2, (2.0*beat)/3),
-		DelayN.ar(delayIn, 1.5, (0.5*beat)),
+		DelayC.ar(delayIn, 2.9, beat),
+		DelayC.ar(delayIn, 2, (2.0*beat)/3),
+		DelayC.ar(delayIn, 1.5, (0.5*beat)),
 	], wrap: 1);
 	delayed1 = SelectX.ar(filterSel1, [
 		RLPF.ar(delayed1, hz, lowRes),
 		delayed1,
 	]);
-	//delayed1 = LFNoise2.kr(103.reciprocal).range(-0.3, 1.1).clip(0, 0).if(delayed1, RLPF.ar(delayed1, hz, lowRes));
 
 	delayInMessedUp = delayIn + delayIn.fold(-0.1, 0.1);
 	delayed2 = SelectX.ar(delaySel2, [
-		DelayN.ar(delayInMessedUp, 0.75, beat/4),
-		DelayN.ar(delayInMessedUp, 2.5, (3/4.0)*beat),
-		DelayN.ar(delayIn, 1.5, (0.5*beat)),
-		DelayN.ar(delayIn, 0.3, (0.1*beat)),
+		DelayC.ar(delayInMessedUp, 0.75, beat/4),
+		DelayC.ar(delayInMessedUp, 2.5, (3/4.0)*beat),
+		DelayC.ar(delayIn, 1.5, (0.5*beat)),
+		DelayC.ar(delayIn, 0.3, (0.1*beat)),
 	], wrap: 1);
 	delayed2 = SelectX.ar(filterSel2, [
 		RLPF.ar(delayed2, (12/5.0)*hz, highRes),
@@ -63,7 +62,6 @@
 	sig = LPF.ar(
 		HPF.ar(Rotate2.ar(sig[0], sig[1], LFNoise2.kr(30.reciprocal)), 20),
 		LFNoise2.kr(43.reciprocal).exprange(3000, 20000));
-	//Out.kr(monitor, A2K.kr(sig) ++ [sel1, sel2]);
 	(sig*amp).tanh
 }/*.scope
 )
