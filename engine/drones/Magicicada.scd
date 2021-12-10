@@ -7,13 +7,9 @@
 // crossfades, at any given time four different delays are participating in the feedback loop.
 // These delays are then filtered/processed/warped and fed back with a small amount of additional noise.
 
-//(
-{ |hz=100, amp=0.5|
-	var sr = 48000;
-	var big = 2.pow((sr*6).log2Ceil);
-	var mediumBig = 2.pow((48000*4).log2Ceil);
-	var medium = 2.pow((48000*2).log2Ceil);
-	var small = 2.pow((48000).log2Ceil);
+// (
+
+{ |hz=110, amp=0.5|
 	var fbk = LocalIn.ar(2);
 	var mid = PinkNoise.ar;
 	var side = 0.1 * BrownNoise.ar;
@@ -24,6 +20,10 @@
 	var distGain = LFNoise2.kr(60.reciprocal).range(1, 2.5);
 	var highRes = LFNoise2.kr(30.reciprocal).range(0.05, 0.2);
 	var lowRes = LFNoise2.kr(30.reciprocal).range(0.05, 0.2);
+	var delaySel1 = SinOsc.kr(166.6.reciprocal, Rand.new(-pi, pi)).range(0, 3);
+	var filterSel1 = SinOsc.kr(82.reciprocal, Rand.new(-pi, pi)).range(-0.3, 1.1).clip(0, 1);
+	var delaySel2 = SinOsc.kr((pi*60).reciprocal, Rand.new(-pi, pi)).range(0, 4);
+	var filterSel2 = SinOsc.kr(123.4.reciprocal, Rand.new(-pi, pi)).range(0, 3);
 	var sig = fbk;
 	sig = LeakDC.ar(sig);
 	phased = sig;
@@ -33,30 +33,38 @@
 
 	sig = ((sig + phased)/2);
 	delayIn = sig + noise;
-	delayed1 = SelectX.ar(LFNoise2.kr(200.reciprocal).range(0, 3), [
-		BufDelayC.ar(LocalBuf.new(mediumBig!2), delayIn, beat),
-		BufDelayC.ar(LocalBuf.new(medium!2), delayIn, (2*beat)/3.0),
-		BufDelayC.ar(LocalBuf.new(medium!2), delayIn, (0.5*beat)),
+	delayed1 = SelectX.ar(delaySel1, [
+		DelayN.ar(delayIn, 2.9, beat),
+		DelayN.ar(delayIn, 2, (2.0*beat)/3),
+		DelayN.ar(delayIn, 1.5, (0.5*beat)),
 	], wrap: 1);
+	delayed1 = SelectX.ar(filterSel1, [
+		RLPF.ar(delayed1, hz, lowRes),
+		delayed1,
+	]);
+	//delayed1 = LFNoise2.kr(103.reciprocal).range(-0.3, 1.1).clip(0, 0).if(delayed1, RLPF.ar(delayed1, hz, lowRes));
+
 	delayInMessedUp = delayIn + delayIn.fold(-0.1, 0.1);
-	delayed2 = SelectX.ar(LFNoise2.kr(340.reciprocal).range(0, 6), [
-		BLowPass.ar(
-			BufDelayL.ar(LocalBuf.new(small!2), delayInMessedUp, beat/4),
-			(12/5.0)*hz, highRes),
-		BLowPass.ar(
-			BufDelayL.ar(LocalBuf.new(medium!2), delayInMessedUp, (3/4.0)*beat),
-			(9/4.0)*hz, highRes),
-		BLowPass.ar(DelayC.ar(delayIn, 1.5, (0.5*beat)), (16.0/5)*hz, highRes),
-		DelayC.ar(delayIn, 1.5, (0.5*beat)),
-		DelayC.ar(delayIn, 0.3, (0.1*beat)),
+	delayed2 = SelectX.ar(delaySel2, [
+		DelayN.ar(delayInMessedUp, 0.75, beat/4),
+		DelayN.ar(delayInMessedUp, 2.5, (3/4.0)*beat),
+		DelayN.ar(delayIn, 1.5, (0.5*beat)),
+		DelayN.ar(delayIn, 0.3, (0.1*beat)),
 	], wrap: 1);
-	delayed1 = LFNoise2.kr(103.reciprocal).range(-0.3, 1.1).clip(0, 1).if(delayed1, BLowPass.ar(delayed1, hz, lowRes));
-	delayed = HPF.ar((distGain*(delayed1 + delayed2)).sin, 20);
+	delayed2 = SelectX.ar(filterSel2, [
+		RLPF.ar(delayed2, (12/5.0)*hz, highRes),
+		SVF.ar(delayed2, (9/2)*hz, highRes, 0.0, 1.0),
+		delayed2,
+	], wrap: 1);
+
+	delayed = HPF.ar((distGain*(delayed1 + delayed2)).sin, LFNoise2.kr(30.reciprocal).range(20, hz));
 	LocalOut.ar(LFNoise2.kr(20.reciprocal).range(0.48, 0.75)*(delayed));
 
 	sig = LPF.ar(
 		HPF.ar(Rotate2.ar(sig[0], sig[1], LFNoise2.kr(30.reciprocal)), 20),
 		LFNoise2.kr(43.reciprocal).exprange(3000, 20000));
+	//Out.kr(monitor, A2K.kr(sig) ++ [sel1, sel2]);
 	(sig*amp).tanh
-}//.scope
-//)
+}/*.scope
+)
+*/
