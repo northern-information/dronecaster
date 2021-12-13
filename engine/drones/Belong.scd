@@ -79,7 +79,7 @@
 	pw=Phasor.ar(0, BufRateScale.kr(buf), 0, BufSampleRate.kr(buf)*60/bpm*16);
 	//pr=Phasor.ar(0, BufRateScale.kr(buf), 0, BufSampleRate.kr(buf)*60/bpm*16);
 	sndr=BufRd.ar(2,buf,pw,interpolation:2);
-	snd = (snd/2) + (sndr*recamt);
+	snd = (snd/2) + (sndr*recamt*Clip.ar(2*amp));
 	//snd = Limiter.ar(snd,0.5);
 	//BufWr.ar(snd,buf,Select.ar(MouseY.kr(0,2),[pw,DC.ar(0)]).poll);
 	BufWr.ar(snd*EnvGen.ar(Env.new([0,1,1,0],[0.1,(1/(bpm/60/4/4))-0.2,0.1]),Impulse.kr(bpm/60/4/4)),buf,pw);
@@ -146,5 +146,5 @@
 	snd=snd*EnvGen.ar(Env.new([0,1],[5]))/2;
 
 	snd = HPF.ar(snd,40);
-    snd
+	snd
 }
