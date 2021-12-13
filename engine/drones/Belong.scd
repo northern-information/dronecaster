@@ -82,7 +82,7 @@
 	snd = (snd/2) + (sndr*recamt);
 	//snd = Limiter.ar(snd,0.5);
 	//BufWr.ar(snd,buf,Select.ar(MouseY.kr(0,2),[pw,DC.ar(0)]).poll);
-	BufWr.ar(snd,buf,pw);
+	BufWr.ar(snd*EnvGen.ar(Env.new([0,1,1,0],[0.1,(1/(bpm/60/4/4))-0.2,0.1]),Impulse.kr(bpm/60/4/4)),buf,pw);
 
 
 	// bass...
