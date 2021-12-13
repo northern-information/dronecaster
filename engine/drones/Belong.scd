@@ -3,7 +3,7 @@
 // Thick, enveloping, shimmering.
 
 {
-   	arg hz=195, amp=0.5,buf=0;
+	arg hz=215, amp=0.5,buf=0;
 	var note,bass,basshz,bassnote,notes_all,chords,emin,cmaj,gmaj,dmaj;
 	var env, env_times,env2, env2_times, env_select;
 	var pulse, pulse_fourth,pulse_two,pulse_half,pulse_quarter, pulse_eighth, pulse_four,pulse_five, pulse_four_ar, pulse_eight, pulse_sixteen, pulse_thirtytwo;
@@ -32,25 +32,22 @@
 	pulse=Impulse.kr(bpm/60/4);
 	pulse_half=Impulse.kr(bpm/60/4/2);
 	pulse_quarter=Impulse.kr(bpm/60/4/4);
-    pulse_eighth=Impulse.kr(bpm/60/4/8);
-	pulse_two=Impulse.kr(bpm/60/4*2);
-	pulse_four=Impulse.kr(bpm/60/4*4);
+	pulse_eighth=Impulse.kr(bpm/60/4/8);
+	//pulse_two=Impulse.kr(bpm/60/4*2);
+	//pulse_four=Impulse.kr(bpm/60/4*4);
 	pulse_five=Impulse.kr(bpm/60/4*5);
-	pulse_four_ar=Impulse.ar(bpm/60/4*4);
-	pulse_sixteen=Impulse.kr(bpm/60/4*16);
-	pulse_thirtytwo=Impulse.kr(bpm/60/4*32);
-	pulse_eight=Impulse.kr(bpm/60/4*8);
+	//pulse_four_ar=Impulse.ar(bpm/60/4*4);
+	//pulse_sixteen=Impulse.kr(bpm/60/4*16);
+	//pulse_thirtytwo=Impulse.kr(bpm/60/4*32);
+	//pulse_eight=Impulse.kr(bpm/60/4*8);
 	pulse_fourth=Impulse.kr(bpm/60/16);
 
 	// note (randomly selected each pulse)
 	bassnote=ArrayMin.kr(Demand.kr(pulse,0,Dseq(chords,inf)))[0];
 	note=Demand.kr(Select.kr(
-		//TExpRand.kr(0.01,11,pulse)
 		TExpRand.kr(0.01,6,pulse)
 		,[pulse,pulse,pulse,pulse,pulse_five,pulse_five]
-		//[pulse,pulse,pulse,pulse,pulse_four,pulse_four,pulse_four,pulse_eight,pulse_eight,pulse_sixteen,pulse_thirtytwo]
 	),0,Dseq(notes_all,inf));
-	//note=Demand.kr(Select.kr(MouseX.kr(0,7),[pulse,pulse,pulse,pulse_eight,pulse_eight,pulse_sixteen,pulse_thirtytwo]),0,Dseq(notes_all,inf));
 	note=note+Demand.kr(pulse_fourth,0,Dseq([12,-12,0,24],inf));
 
 	// envelope (randomly generated each pulse)
@@ -65,14 +62,14 @@
 	env2=SelectX.ar(env_select,[DC.ar(1),env2]);
 
 	// oscillator
-	note = note + hz.cpsmidi;
+	note = note + A2K.kr(hz).cpsmidi;
 	snd=Mix.ar({
 		var snd_;
-		snd_=SawDPW.ar(note.midicps);
+		snd_=SawDPW.ar(Lag.kr(note.midicps,0.02));
 		snd_=DelayC.ar(snd_, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
-		Pan2.ar(snd_,0)/12*amp
+		Pan2.ar(snd_,0)/4
 	}!10);
-	snd=MoogLadder.ar(snd.tanh,LinExp.kr(VarLag.kr(LFNoise0.kr(1/6)+LFNoise0.kr(0),6,warp:\sine),-1,1,hz*10,hz*15));
+	snd=MoogLadder.ar(snd.tanh,LinExp.kr(VarLag.kr(LFNoise0.kr(1/6)+LFNoise0.kr(0),6,warp:\sine),-1,1,hz*8,hz*15));
 
 	// random envelopes on either side
 	snd = [snd[0] * env,snd[1]*env2];
@@ -83,7 +80,7 @@
 	//pr=Phasor.ar(0, BufRateScale.kr(buf), 0, BufSampleRate.kr(buf)*60/bpm*16);
 	sndr=BufRd.ar(2,buf,pw,interpolation:2);
 	snd = (snd/2) + (sndr*recamt);
-	snd = Limiter.ar(snd,0.5);
+	//snd = Limiter.ar(snd,0.5);
 	//BufWr.ar(snd,buf,Select.ar(MouseY.kr(0,2),[pw,DC.ar(0)]).poll);
 	BufWr.ar(snd,buf,pw);
 
@@ -103,10 +100,12 @@
 
 	// kick... (is it even a drone anymore...)
 	sndkick={
-		var decay=VarLag.kr(LFNoise0.kr(1/6),6,warp:\sine).range(1,30);
-		var space=VarLag.kr(LFNoise0.kr(1/6),6,warp:\sine).range(1,30);
+		var out2;
+		var decay=60;
+		var space=decay;
 		var env0, env1, env1m, out;
-        var pulse_=Select.kr(VarLag.kr(LFNoise0.kr(1/6),6,warp:\sine).range(0,7),[pulse_eighth, pulse_quarter, pulse_half, pulse,pulse_two,pulse_two,pulse_two]);
+		var pulse_=DelayN.kr(Select.kr((SinOsc.kr(1/Rand(40,80),3.141*3/2).range(0,9)),[pulse_eighth, pulse_eighth, pulse_quarter, pulse_half, pulse_half, pulse, pulse, pulse, pulse]),bpm/60/2,bpm/60/2);
+		var y,z;
 
 		env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26*decay], [-4, -2, -4]),pulse_);
 		env1 = EnvGen.ar(Env.new([110, 59, 29], [0.005, 0.29], [-4, -5]),pulse_);
@@ -119,25 +118,33 @@
 
 		out = out * 1.2;
 		out = out.clip2(1);
-		out*(-24).dbamp;
-	};
-	snd = Compander.ar(snd,sndkick,0.01,1,0.01,0.01,0.2);
-	snd = snd + (sndkick*EnvGen.ar(Env.new([0,0,1],[60/bpm*16,60/bpm*16])));
+		out = out*EnvGen.ar(Env.perc(0.01,2),pulse_);
 
-	// leak the dc
-	snd = LeakDC.ar(snd);
+		out2 = DelayN.ar(out, 0.03, 0.03);
+		out2 = CombN.ar(out2, 0.1, {Rand(0.01,0.099)}!16, 4);
+		out2 = SplayAz.ar(2, out2);
+		out2 = LPF.ar(out2, 1500);
+		5.do{out2 = AllpassN.ar(out2, 0.1, {Rand(0.01,0.099)}!2, 3)};
+		out2 = LPF.ar(out2, 1500);
+		out = out + (0.7*out2);
+		out = BPeakEQ.ar(out,basshz,1,12);
+		out= out*(-24).dbamp;
+	};
+	//snd = Compander.ar(snd,sndkick,0.01,1,0.01,0.01,0.2);
 
 	// reverb
 	snd2 = DelayN.ar(snd, 0.03, 0.03);
-	snd2 = CombN.ar(snd2, 0.1, {Rand(0.01,0.099)}!32, 4);
+	snd2 = CombN.ar(snd2, 0.1, {Rand(0.01,0.099)}!8, 4);
 	snd2 = SplayAz.ar(2, snd2);
 	snd2 = LPF.ar(snd2, 1500);
-	5.do{snd2 = AllpassN.ar(snd2, 0.1, {Rand(0.01,0.099)}!2, 3)};
+	4.do{snd2 = AllpassN.ar(snd2, 0.1, {Rand(0.01,0.099)}!2, 3)};
 	snd2 = LPF.ar(snd2, 1500);
-	snd = snd + ((VarLag.kr(LFNoise0.kr(1/6),6,warp:\sine).range(0.1,0.3)+EnvGen.kr(Env.new([1,1,0],[6,6]),1,0.3))*snd2);
-    snd=snd*amp;
+	snd = snd + (0.4*snd2);
+	snd = (snd*0.6)+((A2K.kr(amp)>0.7)*sndkick);
+	snd=snd*amp;
 
-    snd=snd*EnvGen.ar(Env.new([0,1],[5]));
+	snd=snd*EnvGen.ar(Env.new([0,1],[5]))/2;
 
+	snd = HPF.ar(snd,40);
     snd
 }
