@@ -13,7 +13,7 @@
 	var y,z;
 	var recamt;
 
-	bpm=rrand(90,130);
+	bpm=rrand(60,130);
 
 	emin=[4,7,11];
 	cmaj=[0,4,7];
