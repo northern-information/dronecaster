@@ -83,7 +83,7 @@ DroneCaster_SynthSocket {
 		});
 
 		// create a buffer for tape delays
-		buf=Buffer.alloc(server,server.sampleRate*10,2);
+		buf=Buffer.alloc(server,server.sampleRate*60,2);
 		("allocated buffer"+buf.bufnum).postln;
 
 		group = Group.new(server);
