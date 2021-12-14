@@ -19,7 +19,7 @@ DroneCaster_SynthSocket {
 			arg hz, amp=1, out=0, gate=1, attack=1.0, release=1.0;
 
 			var aenv, snd;
-			snd = { fn.value(K2A.ar(hz), K2A.ar(amp), K2A.ar(buf.bufnum)) }.try { 
+			snd = { fn.value(K2A.ar(hz), K2A.ar(amp), buf.bufnum) }.try { 
 				arg err;				
 				postln("failed to wrap ugen graph! error:");
 				err.postln;
@@ -27,9 +27,6 @@ DroneCaster_SynthSocket {
 				[Silent.ar]
 			};
 			aenv = EnvGen.kr(Env.asr(attack, 1, release), gate, doneAction:2);
-			// force mix down to stereo (interleaved)
-			snd = Mix.new(snd.flatten.clump(2)) * aenv;
-			
 			Out.ar(out, snd);
 		});
 		if (nope, {

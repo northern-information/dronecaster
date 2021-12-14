@@ -1,7 +1,8 @@
 // @zebra
 //z =
 {
-	arg hz=110, amp=1.0, hzRatio=2.0;
+	arg hz=110, amp=1.0; //, hzRatio=2.0;
+	var hzRatio=2.0;
 	var snd;
 	var aaa, bbb;
 	var ratios = [0.5, 1, 4/3, 7/4, 2, 12/5];
@@ -21,6 +22,7 @@
 	});
 	snd = LeakDC.ar(snd, 0.994);
 	snd = Mix.new(snd.flatten.clump(2));
+	snd.postln;
 	snd = snd * amp * -6.dbamp * Linen.kr(attackTime:6.66);
 	// Peak.kr(Amplitude.kr(snd)).ampdb.poll;
 	snd;
