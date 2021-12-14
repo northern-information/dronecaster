@@ -1,7 +1,8 @@
 // @zebra
 //z =
 {
-	arg hz=110, amp=1.0, decay=1.0,
+	arg hz=110, amp=1.0;
+	var decay=1.0,
 	dustDensity=7, dustLagUp=0.017, dustLagDown=0.07,
 	dustAmp=0.73, brownAmp=0.03, pinkAmp=0.03, sineAmp=0.011, rlpfAmp=0.33,
 	sineHzRatio=0.25, decayRatio=256;
