@@ -19,6 +19,15 @@ local MusicUtil=require "musicutil"
 local initital_monitor_level
 local initital_reverb_onoff
 
+-- midi
+local midi_enabled
+local midi_devices
+local midi_device
+local midi_channel
+local midi_amp_control
+local midi_amp_cc
+local midi_drone_cc
+
 version_major = 1
 version_minor = 0
 version_patch = 0
@@ -57,6 +66,71 @@ done_init = false
 
 -- init & core
 --------------------------------------------------------------------------------
+
+-- midi
+function build_midi_device_list()
+  midi_devices = {}
+  for i = 1,#midi.vports do
+    local long_name = midi.vports[i].name
+    local short_name = string.len(long_name) > 15 and util.acronym(long_name) or long_name
+    table.insert(midi_devices,i..": "..short_name)
+  end
+end
+
+function midi_event(data)
+  -- global midi setting
+  if midi_enabled == 1 then
+    msg = midi.to_msg(data)
+    -- filter channel
+    if msg.ch == midi_channel then
+      if msg.type ~= "clock" then
+        tab.print(msg)
+      end
+      --note message
+      if msg.type == "note_on" then
+        params:set("note",msg.note)
+        -- amp control
+        print(midi_amp_control)
+        if midi_amp_control == 2 then
+          amp = math.min(msg.vel/100, 1)
+        end
+        if midi_amp_control == 3 then
+          amp = math.min(msg.key_pressure/100, 1)
+        end
+        if midi_amp_control ~= 0 then
+          params:set("amp",amp)
+        end
+      end
+      --cc message
+      if msg.type == "cc" then
+        if msg.cc == midi_amp_cc then
+          params:set("amp", (msg.val/127))
+        end
+        if msg.cc == midi_drone_cc then
+          minval = math.min(msg.val, #drones)
+          params:set("drone", minval)
+        end
+      end
+      -- program change message
+      if msg.type == program_change then
+        minval = math.min(msg.val, #drones)
+        params:set("drone", minval)
+      end
+    end
+    -- transport
+    if msg.type == "start" then
+      print("starting")
+      play_drone()
+    end
+    if msg.type == "stop" then
+      print("stopping")
+      engine.stop(1)
+    end
+  end
+end
+  
+  
+
 function init()
 
    list_drone_names(
@@ -99,7 +173,60 @@ function init()
       if playing then 
          play_drone()
       end
-    end)
+	 end)
+  
+  -- init midi params
+  
+  build_midi_device_list()
+  params:add_separator("midi")
+  params:add_binary("midi_enabled", "enable midi", "toggle", 1)
+  params:set_action("midi_enabled",function(x)
+    if x == 0 then
+      midi_enabled = 0
+      params:hide("midi_device")
+      params:hide("midi_in_channel")
+      params:hide("midi_hz_cc")
+      params:hide("midi_amp_cc")
+    elseif x == 1 then
+      midi_enabled = 1
+      params:show("midi_device")
+      params:show("midi_in_channel")
+      params:show("midi_hz_cc")
+      params:show("midi_amp_cc")
+    end
+    _menu.rebuild_params()
+  end)
+  params:add{type = "option", id = "midi_device", name = "device",
+    options = midi_devices, default = 1,
+    action = function(value) 
+      midi_device = midi.connect(value)
+      midi_device.event = midi_event
+      end}
+  params:add{type = "number", id = "midi_in_channel", name = "channel",
+    min = 1, max = 16, default = 1,
+    action = function(value)
+      midi_channel = value
+    end}
+  params:add{type = "option", id = "midi_amp_control", name = "amp note ctrl",
+    options = {"none","velocity","key pressure"}, default = 1,
+    action = function(value) 
+      midi_amp_control = value
+      end}  
+  params:add_number("midi_amp_cc", "amp cc", 0, 127, 76)
+  params:set_action("midi_amp_cc",function(v)
+			      midi_amp_cc = v
+	 end)
+	params:add_number("midi_drone_cc", "drone cc", 0, 127, 75)
+  params:set_action("midi_drone_cc",function(v)
+			      midi_drone_cc = v
+	 end)
+	 
+	 params:bang()
+    
+
+  
+  
+  
     engine.initialize(hz_default,amp_default)
 	 
 	 done_init = true
