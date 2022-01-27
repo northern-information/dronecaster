@@ -86,7 +86,7 @@ function midi_event(data)
   -- filter channel
   if msg.ch == midi_channel then
     --msg debug print
-    --if msg.type ~= "clock" then tab.print(msg)
+    --if msg.type ~= "clock" then tab.print(msg) end
     --note message
     if msg.type == "note_on" then
       params:set("note",msg.note)
@@ -113,7 +113,7 @@ function midi_event(data)
       end
     end
     -- program change message
-    if msg.type == program_change then
+    if msg.type == "program_change" then
       minval = math.min(msg.val, #drones)
       params:set("drone", minval)
     end
