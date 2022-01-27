@@ -79,7 +79,7 @@ end
 
 function midi_event(data)
   -- global midi setting
-  if midi_enabled == 1 then
+  if midi_enabled == 0 then
     return
   end
   msg = midi.to_msg(data)
