@@ -1,7 +1,8 @@
 // @zebra
 //z =
 {
-	arg hz=110, amp=1.0, spring=0.253, damp=0.0088, decay=12.0, fbamt=0.1, crack=1.97;
+	arg hz=110, amp=1.0; //, //spring=0.253, damp=0.0088, decay=12.0, fbamt=0.1, crack=1.97;
+	var spring=0.253, damp=0.0088, decay=12.0, fbamt=0.1, crack=1.97;
 	var r1 = [0.25, 0.5, 1, 3, 2, 9/4, 10/4];
 	var r2 =[1, 3/2, 2, 9/4, 8/3, 14/4];
 	var amps = [0, 0, 2, -9, -4, -9, -12].dbamp;
