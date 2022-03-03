@@ -37,7 +37,7 @@
 		var tikF = filt.value(tik, tikHp*(1+(tikDrumhead*drumhead)), tikLp, tikHighres, tikLores, tikTrash);
 		var tokF = filt.value(tok, tokHp*(1+(tokDrumhead*drumhead)), tokLp, tokHighres, tokLores, tokTrash);
 		var tukF = filt.value(tuk, min(tikLp, tokLp), max(tikLp, tokLp), tikHighres, tokLores, 0);
-		var kiF = filt.value(ki, kiHp, kiLp, kiHighres, kiLores, kiTrash);
+		var kiF = filt.value(ki, kiHp, kiLp, kiHighres, kiLores, kiTrash/2)/2;
 		var kaF = filt.value(ka, kaHp, kaLp, kaHighres, kaLores, kaTrash);
 		var array = [kiAmp*kiF, tikAmp*tikF, tukAmp*tukF, tokAmp*tokF, kaAmp*kaF];
 		var sound;
