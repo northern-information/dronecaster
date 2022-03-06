@@ -1,7 +1,7 @@
 // old version way too complicated
 // we don't want xfades, we want down+up
 DroneCaster_SynthSocket {
-	var server, group, synth, controls, out;
+	var server, <group, <synth, controls, out;
 	var cuedSource, doneResponder;
 	var fadeTime = 1.0;
 	var buf;
