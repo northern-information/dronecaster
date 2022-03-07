@@ -19,20 +19,12 @@ Dronecaster {
 
 		drones = Dictionary.new;
 		PathName.new(baseDronePath).entries.do({|e|
-			var fn, def;
 			var name = e.fileNameWithoutExtension;
-			if (name.beginsWith("_meta_"), {
-				// functions that return drone functions
-				name = name.replace("_meta_", "");
-				fn = e.fullPath.load.value(group: socket.group);
-			}, {
-				// regular drones
-				fn = e.fullPath.load;
-			});
-			def = socket.wrapDef(fn, name, server);
+			var def = socket.wrapDef(e.fullPath.load, name, server);
 			if (def.notNil, { drones[name] = def; });
 		});
 		drones.postln;
+
 
 		recordBus = Bus.audio(server, 2);
 		inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
