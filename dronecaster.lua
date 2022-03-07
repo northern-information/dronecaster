@@ -277,6 +277,10 @@ function list_drone_names(callback)
 	 name = string.sub(line, 2, -5)
 	 table.insert(names, name)
       end
+      for line in string.gmatch(text, "/_meta_[%a%d%.%s]-%.scd") do
+	 name = string.sub(line, 8, -5)
+	 table.insert(names, name)
+      end
       table.sort(names)
       callback(names)
    end
