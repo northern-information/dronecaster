@@ -32,7 +32,7 @@
 			LFNoise2.ar(noise_hz, 0.0005 * (1.0 - noise_vol.clip(-1, 0).range(0, 1)))
 		];
 
-		in = In.ar(~ruinAudio);
+		in = In.ar(~ruinAudio, 2);
 		in = Compander.ar(in, in, 0.1, 1.0, 0.1, 0.01, 0.1, 0.1, 0.0);
 		in = Mix.ar([in, noise]);
 		in = GVerb.ar(in, 120, 103, 0.43, 0.51, 15, -5, -26, -20, mul: combined_defects);
@@ -150,7 +150,7 @@
 				rate = rates[i];
 				velocity = 0.25 / chord;
 				if (rate > 1) { velocity = velocity / rate.squared };
-				s.sendMsg(\s_new, name, s.nextNodeID, 0, group.nodeID, \freq, rate, \velo, velocity, \pan, 1.0.rand2);
+				s.sendMsg(\s_new, name, s.nextNodeID, 0, group.nodeID, \freq, rate, \velo, velocity, \pan, 0.5.rand2);
 			};
 			// [name, chord, rates, velocity].postln; // DEBUG output
 			[1, 1, 1, 2, 2, 4, 8, 16].choose.wait;
