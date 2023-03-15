@@ -11,6 +11,7 @@
 --------------------------------------------------------------------------------
 engine.name = "Dronecaster"
 draw = include "lib/draw"
+midicontrol = include "lib/midicontrol"
 
 local MusicUtil=require "musicutil"
 
@@ -61,50 +62,56 @@ function init()
 
    list_drone_names(
       function(names)
-	 drones = names
-	 tab.print(drones)
-	 
-	 audio:pitch_off()
+        drones = names
+        tab.print(drones)
+        
+        audio:pitch_off()
+        
+        initital_monitor_level = params:get('monitor_level')
+        params:set('monitor_level', -math.huge)
+        initital_reverb_onoff = params:get('reverb')
+        params:set('reverb', 1) -- 1 is OFF
+        
+        draw.init()
+        if util.file_exists(save_path) == false then
+          util.make_dir(save_path)
+        end
+        
+        crow.input[1].mode("stream", .01)
+        crow.input[1].stream = process_crow_cv_a
+        
+        counter.time = 1
+        counter.count = -1
+        counter.play = 1
+        counter.event = the_sands_of_time
+        counter:start()
+        params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
+        params:set_action("amp", engine.amp)
+        params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
+        params:set_action("hz", hz_base_update)
+        params:add{type="number",id="note",name="note",min=0,max=127,default=24,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
+        params:set_action("note",function(v)
+        	      params:set("hz",math.pow(2,(v-69)/12)*440)
+        end)
+        
+        --params:add_control("drone","drone", controlspec.new(1, #drones, "lin", 0, drone_default, "drone", 1/(#drones-1)))
+        params:add_option("drone", "drone", drones)
+        params:set_action("drone", function()
+          if playing then 
+             play_drone()
+          end
+        end)
+        engine.initialize(hz_default,amp_default)
+        
+        -- init midi params
+        midicontrol.init()
+        midicontrol.build_midi_params()
 
-	 initital_monitor_level = params:get('monitor_level')
-	 params:set('monitor_level', -math.huge)
-	 initital_reverb_onoff = params:get('reverb')
-	 params:set('reverb', 1) -- 1 is OFF
-
-	 draw.init()
-	 if util.file_exists(save_path) == false then
-	    util.make_dir(save_path)
-	 end
-	 
-	 crow.input[1].mode("stream", .01)
-	 crow.input[1].stream = process_crow_cv_a
-	 
-	 counter.time = 1
-	 counter.count = -1
-	 counter.play = 1
-	 counter.event = the_sands_of_time
-	 counter:start()
-	 params:add_control("amp", "amp", controlspec.new(0, 1, "amp", 0, amp_default, "amp"))
-	 params:set_action("amp", engine.amp)
-	 params:add_control("hz", "hz", controlspec.new(0, 20000, "lin", 0, hz_default, "hz"))
-	 params:set_action("hz", hz_base_update)
-	 params:add{type="number",id="note",name="note",min=0,max=127,default=24,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
-	 params:set_action("note",function(v)
-			      params:set("hz",math.pow(2,(v-69)/12)*440)
-	 end)
-
-	 --params:add_control("drone","drone", controlspec.new(1, #drones, "lin", 0, drone_default, "drone", 1/(#drones-1)))
-	 params:add_option("drone", "drone", drones)
-	 params:set_action("drone", function()
-      if playing then 
-         play_drone()
-      end
-    end)
-    engine.initialize(hz_default,amp_default)
-	 
-	 done_init = true
+        
+        done_init = true
       end
    )
+   
 
    clock.run(function()
       while true do
