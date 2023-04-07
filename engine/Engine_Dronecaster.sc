@@ -11,7 +11,7 @@ Dronecaster {
 
 	init { arg server, baseDronePath;
 		socket = DroneCaster_SynthSocket.new(server, 0, [\hz, \amp]);
-		
+
 		if (baseDronePath == nil, {
 			baseDronePath = PathName(Document.current.path).pathOnly ++ "engine/drones";
 		});
@@ -68,8 +68,9 @@ Dronecaster {
 // norns glue
 Engine_Dronecaster : CroneEngine {
 	classvar luaOscPort = 10111;
+	classvar <>dronePath = "/home/we/dust/code/dronecaster/engine/drones" ;
 
-	var caster; // a Dronecaster
+	var <caster; // a Dronecaster
 	*new { arg context, doneCallback;
 		^super.new(context, doneCallback);
 	}
@@ -81,7 +82,7 @@ Engine_Dronecaster : CroneEngine {
 		this.addCommand("initialize", "ff", { arg msg;
 			if (caster==nil,{
 				//  :/
-				caster = Dronecaster.new(context.server, "/home/we/dust/code/dronecaster/engine/drones" );
+				caster = Dronecaster.new(context.server, dronePath);
 				// caster.drones.keys.do({ arg name;
 				// 	("sending name: " ++ name).postln;
 				// 	luaOscAddr.sendMsg("/add_drone", name);
