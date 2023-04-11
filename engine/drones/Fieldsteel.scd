@@ -1,9 +1,11 @@
+(
 d =
 {
 	// Build multiple voices into the function directly
 	arg atk=2, sus=5, rel=3, c1=1, c2=(-1),
 	hz=329.63, detune=0.1, pan=0, wander=0.2, pregain=0,
 	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, amp=1, out=0,
+	bal=0, // balance between drone (-1) and marimba (1)
 	marimba_freq=1, marimba_rqmin=0.002, marimba_rqmax=0.01;
 
 	var snd;
@@ -59,6 +61,7 @@ d =
 		var layers;
 
 		rhythms = Dxrand(hz * [1/2, 3/2, 2/3, 9/4, 11/17, 1, 2, 4, 5, 9/4], inf);
+		//rhythms = Dxrand(hz * [1/2, 2/3, 1, 4/3, 2, 5/2, 3, 4, 6, 8], inf);
 		pitches = Drand(cf * [1/2, 4/5, 1, 2, 5/4, 4], inf);
 		trigs = Impulse.kr(1/4);
 
@@ -78,11 +81,24 @@ d =
 		sig;
 	};
 
+	// Balance between sound sources.
+	// Drone is 100% when \bal = -1, marimba when \bal = 1.
+	// Both are 50/50 when \bal = 0.
+	var drone_amp = bal.linlin(-1, 1, 1, 0);
+	var marimba_amp = bal.linlin(-1, 1, 0, 1);
+
 	// Take drone-related sig[0..1] and marimba sig[0..1] and Mix.ar() together
-	snd = Mix.ar([drone.value, marimba.value(marimba_freq, hz)]);
+	snd = Mix.ar([
+		drone_amp * drone.value,
+		marimba_amp * marimba.value(marimba_freq, hz)
+	]);
 
 	// marimba.set(\amp, 4)
 
 	// Scale drone and marimba amp with -1..1 --> 0..1 for drone, 1..0 for marimba
 }
 .play
+)
+
+//d.set(\bal, 1/4)
+//d.set(\hz, 220)
