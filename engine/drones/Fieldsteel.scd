@@ -97,8 +97,7 @@
 	]);
 
 	// marimba.set(\amp, 4)
-
-	// Scale drone and marimba amp with -1..1 --> 0..1 for drone, 1..0 for marimba
+	snd;
 }
 // .play
 // )
