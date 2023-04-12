@@ -3,6 +3,7 @@
 {
 	// Build multiple voices into the function directly
 	arg hz=329.63, amp=1;
+
 	var atk=2, sus=5, rel=3, c1=1, c2=(-1),
 	detune=0.1, pregain=0,
 	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, out=0,
@@ -91,10 +92,10 @@
 	var marimba_amp = bal.linlin(-1, 1, 0, 1);
 
 	// Take drone-related sig[0..1] and marimba sig[0..1] and Mix.ar() together
-	snd = Mix.ar([
+	snd = Mix.new([
 		drone_amp * drone.value,
 		marimba_amp * marimba.value(marimba_freq, hz),
-		Splay.ar(Dust.ar(4!2, mul:crackle), spread:0.5) // bit of optional texture-dust
+		//Splay.ar(Dust.ar(4!2, mul:crackle), spread:0.5) // bit of optional texture-dust
 	]);
 
 	// marimba.set(\amp, 4)
