@@ -3,9 +3,10 @@ d =
 {
 	// Build multiple voices into the function directly
 	arg atk=2, sus=5, rel=3, c1=1, c2=(-1),
-	hz=329.63, detune=0.1, pan=0, wander=0.2, pregain=0,
+	hz=329.63, detune=0.1, pregain=0,
 	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, amp=1, out=0,
 	bal=0, // balance between drone (-1) and marimba (1)
+	crackle=0, // amp for "dust"
 	marimba_freq=1, marimba_rqmin=0.002, marimba_rqmax=0.01;
 
 	var snd;
@@ -43,7 +44,7 @@ d =
 		sig = sig * env * (amp + 1);
 		// but scale clipped signal back below unity
 		//sig = sig.softclip * 0.75;
-		sig = Splay.ar(sig);
+		sig = Splay.ar(sig, spread:0.85);
 		sig;
 	};
 
@@ -62,7 +63,7 @@ d =
 
 		rhythms = Dxrand(hz * [1/2, 3/2, 2/3, 9/4, 11/17, 1, 2, 4, 5, 9/4], inf);
 		//rhythms = Dxrand(hz * [1/2, 2/3, 1, 4/3, 2, 5/2, 3, 4, 6, 8], inf);
-		pitches = Drand(cf * [1/2, 4/5, 1, 2, 5/4, 4], inf);
+		pitches = Drand(cf * [1/2, 1, 2, 5/4, 4], inf); // 4/5?
 		trigs = Impulse.kr(1/4);
 
 		//sig = Saw.ar(Demand.kr(trigs, 0, rhythms), mul:amp);
@@ -75,10 +76,11 @@ d =
 					mul:(1 + (amp/layers)) * Demand.kr(trigs, 0, Dbrown(0.6))),
 				Demand.kr(trigs, 0, pitches),
 				{LFNoise1.kr(0.1).exprange(rqmin, rqmax)}
-			).softclip
-		}));
+			).tanh
+		}), spread: 0.7);
 
-		sig;
+		//env = EnvGen.kr(Env([0, 1, 1, 0], [3, 1, 5], [c1, 0, c2]), trigs);
+		sig // * env;
 	};
 
 	// Balance between sound sources.
@@ -90,7 +92,8 @@ d =
 	// Take drone-related sig[0..1] and marimba sig[0..1] and Mix.ar() together
 	snd = Mix.ar([
 		drone_amp * drone.value,
-		marimba_amp * marimba.value(marimba_freq, hz)
+		marimba_amp * marimba.value(marimba_freq, hz),
+		Splay.ar(Dust.ar(4!2, mul:crackle), spread:0.5) // bit of optional texture-dust
 	]);
 
 	// marimba.set(\amp, 4)
@@ -100,5 +103,6 @@ d =
 .play
 )
 
+d.set(\crackle, 0.1)
 //d.set(\bal, 1/4)
 //d.set(\hz, 220)
