@@ -2,9 +2,10 @@
 // d =
 {
 	// Build multiple voices into the function directly
-	arg atk=2, sus=5, rel=3, c1=1, c2=(-1),
-	hz=329.63, detune=0.1, pregain=0,
-	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, amp=1, out=0,
+	arg hz=329.63, amp=1;
+	var atk=2, sus=5, rel=3, c1=1, c2=(-1),
+	detune=0.1, pregain=0,
+	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, out=0,
 	bal=0, // balance between drone (-1) and marimba (1)
 	crackle=0, // amp for "dust"
 	marimba_freq=1, marimba_rqmin=0.002, marimba_rqmax=0.01;
