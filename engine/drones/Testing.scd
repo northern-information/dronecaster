@@ -13,7 +13,7 @@
 		SinOsc.ar(hz*2, mul:amp/4)!2;
 	};
 
-	snd = one.value;
+	snd = Mix.new([one.value, two.value]);
 }
 // .play
 // )
