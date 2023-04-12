@@ -57,14 +57,15 @@
 	// Now let's add the "marimba", which is Saw -> BPF with small frequency (<10Hz), very small rq (~0.002--0.01), pitch controlled by cf. We'll want that pitch to match the droning (maybe [0.5, 1, 2, 4] * hz?). Some number of simultaneous strikes, each demanding a varying Saw(freq)--which, again, controls the rhythm.
 
 	var marimba = {
-		arg hz=1, cf=329.63, rqmin=0.002, rqmax=0.01, amp=1;
+		arg freq=1, cf=329.63;
+		var rqmin=0.002, rqmax=0.01, amp=1;
 
 		var sig, env;
 		var rhythms, pitches, trigs;
 		var layers;
 
-		rhythms = Dxrand(hz * [1/2, 3/2, 2/3, 9/4, 11/17, 1, 2, 4, 5, 9/4], inf);
-		//rhythms = Dxrand(hz * [1/2, 2/3, 1, 4/3, 2, 5/2, 3, 4, 6, 8], inf);
+		rhythms = Dxrand(freq * [1/2, 3/2, 2/3, 9/4, 11/17, 1, 2, 4, 5, 9/4], inf);
+		//rhythms = Dxrand(freq * [1/2, 2/3, 1, 4/3, 2, 5/2, 3, 4, 6, 8], inf);
 		pitches = Drand(cf * [1/2, 1, 2, 5/4, 4], inf); // 4/5?
 		trigs = Impulse.kr(1/4);
 
