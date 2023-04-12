@@ -1,5 +1,5 @@
-(
-d =
+// (
+// d =
 {
 	// Build multiple voices into the function directly
 	arg atk=2, sus=5, rel=3, c1=1, c2=(-1),
@@ -100,9 +100,9 @@ d =
 
 	// Scale drone and marimba amp with -1..1 --> 0..1 for drone, 1..0 for marimba
 }
-.play
-)
-
-d.set(\crackle, 0.1)
-//d.set(\bal, 1/4)
-//d.set(\hz, 220)
+// .play
+// )
+//
+// d.set(\crackle, 0.1)
+// //d.set(\bal, 1/4)
+// //d.set(\hz, 220)
