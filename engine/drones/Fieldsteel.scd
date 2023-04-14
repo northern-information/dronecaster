@@ -38,7 +38,7 @@
 		);
 
 		// boost amp a bit to push clipping
-		sig = sig * env * (amp + 1);
+		sig = sig * env * 1.5;
 		// but scale clipped signal back below unity
 		sig = sig.softclip;
 		sig = Splay.ar(sig, spread:0.85);
@@ -73,7 +73,7 @@
 				res: {1 - LFNoise1.kr(0.1).exprange(rqmin, rqmax)},
 				lowpass: 0,
 				bandpass: 1,
-				mul: 0.1 * amp
+				mul: 0.1
 			).softclip
 		}), spread: 0.7);
 
@@ -97,7 +97,7 @@
 		//Splay.ar(Dust.ar(4!2, mul:crackle), spread:0.5) // bit of optional texture-dust
 	]);
 
-	snd;
+	snd * amp; // Let amp control overall output volume
 }
 // .play
 // )
