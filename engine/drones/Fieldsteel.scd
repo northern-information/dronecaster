@@ -1,15 +1,14 @@
 // (
 // d =
 {
-	// Build multiple voices into the function directly
-	arg hz=329.63, amp=1;
+	arg hz=220, amp=1;
 
 	var atk=2, sus=5, rel=3, c1=1, c2=(-1),
 	detune=0.1, pregain=0,
 	cfmin=300, cfmax=1000, rqmin=0.1, rqmax=0.2, out=0,
-	bal=0, // balance between drone (-1) and marimba (1)
+	bal=(-0.35), // balance between drone (-1) and marimba (1)
 	crackle=0, // amp for "dust"
-	marimba_freq=1, marimba_rqmin=0.002, marimba_rqmax=0.01;
+	marimba_freq=1/4, marimba_rqmin=0.002, marimba_rqmax=0.01;
 
 	var snd;
 
@@ -45,7 +44,7 @@
 		// boost amp a bit to push clipping
 		sig = sig * env * (amp + 1);
 		// but scale clipped signal back below unity
-		//sig = sig.softclip * 0.75;
+		sig = sig.softclip;
 		sig = Splay.ar(sig, spread:0.85);
 		sig;
 	};
@@ -57,16 +56,16 @@
 	// Now let's add the "marimba", which is Saw -> BPF with small frequency (<10Hz), very small rq (~0.002--0.01), pitch controlled by cf. We'll want that pitch to match the droning (maybe [0.5, 1, 2, 4] * hz?). Some number of simultaneous strikes, each demanding a varying Saw(freq)--which, again, controls the rhythm.
 
 	var marimba = {
-		arg freq=1, cf=329.63;
+		var freq=1/4;
 		var rqmin=0.002, rqmax=0.01, amp=1;
 
 		var sig, env;
 		var rhythms, pitches, trigs;
 		var layers;
 
-		rhythms = Dxrand(freq * [1/2, 3/2, 2/3, 9/4, 11/17, 1, 2, 4, 5, 9/4], inf);
+		rhythms = Dxrand(freq * [1/2, 3/2, 9/4, 11/17, 1, 2, 4, 5], inf);
 		//rhythms = Dxrand(freq * [1/2, 2/3, 1, 4/3, 2, 5/2, 3, 4, 6, 8], inf);
-		pitches = Drand(cf * [1/2, 1, 2, 5/4, 4], inf); // 4/5?
+		pitches = Drand(hz * [1/2, 1, 2, 5/4, 4], inf); // 4/5?
 		trigs = Impulse.kr(1/4);
 
 		//sig = Saw.ar(Demand.kr(trigs, 0, rhythms), mul:amp);
@@ -74,12 +73,16 @@
 
 		layers = 3;
 		sig = Splay.ar(Array.fill(layers, {
-			BPF.ar(
-				Saw.ar(Demand.kr(trigs, 0, rhythms),
-					mul:(1 + (amp/layers)) * Demand.kr(trigs, 0, Dbrown(0.6))),
-				Demand.kr(trigs, 0, pitches),
-				{LFNoise1.kr(0.1).exprange(rqmin, rqmax)}
-			).tanh
+			SVF.ar(
+				LFSaw.ar(Demand.kr(trigs, 0, rhythms),
+					//mul:(1 + (amp/layers)) * Demand.kr(trigs, 0, Dbrown(0.6))),
+					mul:Demand.kr(trigs, 0, Dbrown(0.6))),
+				cutoff: Demand.kr(trigs, 0, pitches),
+				res: {1 - LFNoise1.kr(0.1).exprange(rqmin, rqmax)},
+				lowpass: 0,
+				bandpass: 1,
+				mul: 0.1 * amp
+			).softclip
 		}), spread: 0.7);
 
 		//env = EnvGen.kr(Env([0, 1, 1, 0], [3, 1, 5], [c1, 0, c2]), trigs);
@@ -92,19 +95,21 @@
 	var drone_amp = bal.linlin(-1, 1, 1, 0);
 	var marimba_amp = bal.linlin(-1, 1, 0, 1);
 
-	// Take drone-related sig[0..1] and marimba sig[0..1] and Mix.ar() together
+	drone_amp.postln;
+	marimba_amp.postln;
+
+	// Mix drone and marimba (stereo) signals together
 	snd = Mix.new([
 		drone_amp * drone.value,
-		marimba_amp * marimba.value(marimba_freq, hz),
+		marimba_amp * marimba.value,
 		//Splay.ar(Dust.ar(4!2, mul:crackle), spread:0.5) // bit of optional texture-dust
 	]);
 
-	// marimba.set(\amp, 4)
 	snd;
 }
 // .play
 // )
-//
-// d.set(\crackle, 0.1)
-// //d.set(\bal, 1/4)
-// //d.set(\hz, 220)
+// //
+// // d.set(\crackle, 0.1)
+// d.set(\bal, -0.75)
+// d.set(\hz, 220)
