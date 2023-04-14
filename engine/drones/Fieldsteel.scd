@@ -1,5 +1,5 @@
-(
-d =
+// (
+// d =
 {
 	arg hz=220, amp=1;
 
@@ -99,8 +99,8 @@ d =
 
 	snd;
 }
-.play
-)
+// .play
+// )
 // //
 // // d.set(\crackle, 0.1)
 // d.set(\bal, -0.75)
