@@ -1,3 +1,13 @@
+/*
+DroneDef inspired by the inimitable source of
+boundless Supercollider knowledge and masterful pedagogy,
+Dr. Eli Fieldsteel.
+
+Concept, structure, and tonality "borrowed" from
+Tutorial 15: Composing a Piece, Part I
+(https://www.youtube.com/watch?v=lGs7JOOVjag&t=790s)
+*/
+
 // (
 // d =
 {
@@ -11,6 +21,7 @@
 
 	var snd;
 
+	// Band-passed saw at audio rates
 	var drone = {
 
 		var sig, env;
@@ -46,13 +57,12 @@
 	};
 
 
-	// Now let's add the "marimba", which is Saw -> BPF with small frequency (<10Hz), very small rq (~0.002--0.01), pitch controlled by cf. We'll want that pitch to match the droning (maybe [0.5, 1, 2, 4] * hz?). Some number of simultaneous strikes, each demanding a varying Saw(freq)--which, again, controls the rhythm.
-
+	// Band-passed saw at low frequencies (rhythm rather than pitch)
 	var marimba = {
 		var freq=1/4;
 		var rqmin=0.002, rqmax=0.01;
 
-		var sig, env;
+		var sig;
 		var rhythms, pitches, trigs;
 		var layers;
 
@@ -77,8 +87,7 @@
 			).softclip
 		}), spread: 0.7);
 
-		//env = EnvGen.kr(Env([0, 1, 1, 0], [3, 1, 5], [c1, 0, c2]), trigs);
-		sig // * env;
+		sig
 	};
 
 	// Balance between sound sources.
@@ -86,9 +95,6 @@
 	// Both are 50/50 when \bal = 0.
 	var drone_amp = bal.linlin(-1, 1, 1, 0);
 	var marimba_amp = bal.linlin(-1, 1, 0, 1);
-
-	//drone_amp.postln;
-	//marimba_amp.postln;
 
 	// Mix drone and marimba (stereo) signals together
 	snd = Mix.new([
@@ -101,7 +107,4 @@
 }
 // .play
 // )
-// //
-// // d.set(\crackle, 0.1)
-// d.set(\bal, -0.75)
 // d.set(\hz, 220)
