@@ -14,4 +14,4 @@
  
 # Contribute
 
-We need more `SynthDefs`! Join the discussion on lines: https://l.llllllll.co/dronecaster
+We need more `SynthDefs`! Join the discussion on lines: [https://l.llllllll.co/dronecaster](https://l.llllllll.co/dronecaster)
