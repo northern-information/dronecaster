@@ -19,15 +19,15 @@ DroneCaster_SynthSocket {
 			arg hz, amp=1, out=0, gate=1, attack=1.0, release=1.0;
 
 			var aenv, snd;
-			snd = { fn.value(K2A.ar(hz), K2A.ar(amp), buf.bufnum) }.try { 
-				arg err;				
+			snd = { fn.value(K2A.ar(hz), K2A.ar(amp), buf.bufnum) }.try {
+				arg err;
 				postln("failed to wrap ugen graph! error:");
 				err.postln;
 				nope = true;
 				[Silent.ar]
 			};
 			aenv = EnvGen.kr(Env.asr(attack, 1, release), gate, doneAction:2);
-			Out.ar(out, snd);
+			Out.ar(out, snd * aenv);
 		});
 		if (nope, {
 			^nil
@@ -39,6 +39,7 @@ DroneCaster_SynthSocket {
 
 
 	stop {
+		postln("stopping...");
 		if (synth.notNil, {
 			synth.set(\gate, 0);
 		});
@@ -65,7 +66,7 @@ DroneCaster_SynthSocket {
 	setFadeTime { arg t;
 		fadeTime = t;
 		if (synth.notNil, {
-			synth.set(\atteck, fadeTime);
+			synth.set(\attack, fadeTime);
 			synth.set(\release, fadeTime);
 		});
 	}
@@ -118,11 +119,11 @@ DroneCaster_SynthSocket {
 			controls.keys.do({ arg k;
 				controlVals[k] = controls[k].getSynchronous;
 			});
-			
+
 			synthArgs = [\out, out, \attack, fadeTime, \release, fadeTime] ++ controlVals.getPairs;
 			postln("synthArgs = " ++ synthArgs);
 			postf("cuedSource = % (%)\n", cuedSource, cuedSource.name);
-			
+
 			synth = Synth.new(cuedSource.name, synthArgs, target:group);
 			postf("new synth = %\n; mapping...\n", synth);
 			controls.keys.do({ arg k; synth.map(k, controls[k]); });
