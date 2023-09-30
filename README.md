@@ -2,8 +2,6 @@
 
 ![Latest Release](https://img.shields.io/github/v/release/northern-information/dronecaster?sort=semver&color=%23f)
 
-![dronecaster](doc/dronecaster.png)
-
 ![dronecaster](doc/instructions.png)
 
 # Installation
